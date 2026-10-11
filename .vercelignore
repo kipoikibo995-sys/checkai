@@ -1,0 +1,7 @@
+# Vercel serves only the browser version. The Python app (and its
+# requirements.txt, which would make Vercel look for a Python server)
+# is meant to run on your own computer.
+requirements.txt
+aicheck/
+tests/
+samples/

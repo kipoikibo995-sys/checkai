@@ -56,6 +56,8 @@ echo "Paste text here..." | python -m aicheck check
 
 **Browser only:** open `browser/index.html` directly, or turn on GitHub Pages for this repo to get a shareable link. This version uses the writing-style signals only.
 
+**Deploy on Vercel:** import this repo in Vercel and deploy with the default settings. `vercel.json` tells Vercel to serve the `browser/` folder as a static site, and `.vercelignore` leaves the Python app out. The online version uses the writing-style signals only, because the language models are too large for serverless hosting.
+
 ### Choosing a model
 
 | Option | Models | Needs |
