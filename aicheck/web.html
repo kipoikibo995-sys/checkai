@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Máy soi văn AI</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800&display=swap">
+<style>
+/* Layout theo KoJi Launch: dải hero tối xanh mực, thân trang nền kem, thẻ trắng viền mảnh, nút viên thuốc cam */
+:root {
+  --ink: #081c25;
+  --ink-deep: #030d17;
+  --bg: #faf8f1;
+  --surface: #ffffff;
+  --fg: #081c25;
+  --muted: #4a5053;
+  --line: #e9e4d9;
+  --accent: #f05216;
+  --accent-2: #ff8e51;
+  --gold: #f1b449;
+  --hero-fg: #ffffff;
+  --hero-muted: #c3d3df;
+  --ai: #f05216;
+  --ai-soft: #fde3d6;
+  --mid: #b7791f;
+  --mid-soft: #fbedcf;
+  --human: #1f8a5b;
+  --human-soft: #d9f0e3;
+  --conn-soft: #dde8ef;
+  --display: "Be Vietnam Pro", "DM Sans", Arial, sans-serif;
+  --body: "Be Vietnam Pro", "DM Sans", Arial, sans-serif;
+  --mono: "Be Vietnam Pro", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #030d17; --surface: #081c25; --fg: #eef2f4; --muted: #a9b8c3; --line: #16303c;
+  --ai: #ff7a3d; --ai-soft: #3d1a0c; --mid: #f1b449; --mid-soft: #3a2b0e;
+  --human: #4cc98b; --human-soft: #0f3324; --conn-soft: #12324a; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #030d17; --surface: #081c25; --fg: #eef2f4; --muted: #a9b8c3; --line: #16303c;
+  --ai: #ff7a3d; --ai-soft: #3d1a0c; --mid: #f1b449; --mid-soft: #3a2b0e;
+  --human: #4cc98b; --human-soft: #0f3324; --conn-soft: #12324a; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.6; }
+.hero { background: radial-gradient(120% 140% at 85% 0%, #0d2a37 0%, var(--ink-deep) 60%); color: var(--hero-fg); border-bottom: 1px solid #16303c; }
+.hero .inner { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 56px 48px; display: grid; gap: 14px; }
+.kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--hero-muted); }
+.hero h1 { font-family: var(--display); font-weight: 800; font-size: clamp(40px, 7vw, 72px); line-height: 1; letter-spacing: -0.035em; margin: 0; text-wrap: balance; }
+.hero h1 .dot { color: var(--accent); }
+.hero p { margin: 0; color: var(--hero-muted); font-size: 17px; max-width: 60ch; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 64px; display: grid; gap: 32px; }
+.tool { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 820px) { .tool { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; display: grid; gap: 14px; min-width: 0; }
+.panel.result { border-top: 3px solid var(--accent); }
+label.lab, .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted); font-weight: 700; }
+textarea { width: 100%; min-height: 260px; resize: vertical; font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; line-height: 1.65; }
+textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font: inherit; font-weight: 700; font-size: 14px; border-radius: 999px; padding: 10px 20px; cursor: pointer; border: 1px solid var(--fg); background: transparent; color: var(--fg); transition: transform .15s, box-shadow .15s; }
+button:hover { transform: translateY(-1px); }
+button.primary { background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-color: transparent; color: #ffffff; box-shadow: 0 6px 18px -8px var(--accent); }
+button.primary .arr { margin-left: 10px; }
+button:disabled { opacity: .6; cursor: progress; transform: none; }
+.count { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.score { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; }
+.dial { font-family: var(--display); font-weight: 800; font-size: 56px; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.dial small { font-size: 18px; color: var(--muted); letter-spacing: 0; }
+.verdict { display: inline-block; padding: 4px 12px; border-radius: 99px; font-weight: 700; font-size: 13px; }
+.v-ai { background: var(--ai-soft); color: var(--ai); }
+.v-mid { background: var(--mid-soft); color: var(--mid); }
+.v-human { background: var(--human-soft); color: var(--human); }
+.bar { height: 8px; border-radius: 99px; background: linear-gradient(90deg, var(--human), var(--gold), var(--accent)); position: relative; margin-top: 10px; }
+.bar i { position: absolute; top: -5px; width: 18px; height: 18px; background: var(--surface); border: 3px solid var(--fg); border-radius: 50%; transform: translateX(-9px); transition: left .3s; }
+.warn { font-size: 13px; color: var(--mid); margin: 0; }
+.signals { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.sig { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.sig:last-child { border-bottom: 0; padding-bottom: 0; }
+.sig b { font-weight: 700; }
+.sig .val { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
+.sig .note { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+.meter { grid-column: 1 / -1; height: 5px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.meter span { display: block; height: 100%; border-radius: 99px; }
+.chart { display: flex; align-items: flex-end; gap: 3px; height: 70px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.chart span { flex: 1 0 5px; background: linear-gradient(180deg, var(--accent-2), var(--accent)); border-radius: 4px 4px 0 0; min-height: 2px; }
+.out { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px; overflow-y: auto; }
+mark { border-radius: 4px; padding: 0 2px; color: inherit; }
+mark.c { background: var(--ai-soft); }
+mark.k { background: var(--conn-soft); }
+mark.h { background: var(--human-soft); }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--muted); }
+.legend mark { font-size: 12px; }
+.section-title { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 4vw, 40px); letter-spacing: -0.03em; line-height: 1.1; margin: 0; text-wrap: balance; }
+.explain { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.explain section { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 16px; padding: 22px; }
+.explain h2 { font-family: var(--display); font-weight: 700; font-size: 19px; letter-spacing: -0.01em; margin: 0 0 12px; text-wrap: balance; }
+.explain ul { padding: 0; margin: 0; list-style: none; display: grid; gap: 10px; }
+.explain li { position: relative; padding-left: 18px; font-size: 14px; }
+.explain li::before { content: ""; position: absolute; left: 0; top: .6em; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.explain a { color: var(--accent); font-weight: 700; }
+.term { font-weight: 700; }
+.foot { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 18px; max-width: 80ch; margin: 0; }
+@media (prefers-reduced-motion: reduce) { .bar i, button { transition: none; } button:hover { transform: none; } }
+</style>
+
+<style>
+mark.s1 { background: none; border-bottom: 2px solid var(--mid); }
+mark.s2 { background: none; border-bottom: 2px solid var(--ai); }
+.modelinfo { font-family: var(--mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.top { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.top li { display: grid; grid-template-columns: 3.5em 1fr; gap: 8px; }
+.top b { font-family: var(--mono); font-weight: 500; color: var(--ai); }
+.err { color: var(--ai); font-size: 13px; margin: 0; }
+</style>
+</head>
+<body>
+<section class="hero"><div class="inner">
+  <div class="kicker">KoJi Tools · Kiểm tra nội dung</div>
+  <h1>Soi văn AI<span class="dot">.</span></h1>
+  <p>Dán văn bản rồi bấm Kiểm tra. Chương trình chấm bằng mô hình ngôn ngữ (phương pháp Binoculars) kết hợp sáu dấu hiệu văn phong, chạy hoàn toàn trên máy bạn.</p>
+</div></section>
+<div class="wrap">
+  <div class="tool">
+    <div class="panel">
+      <label class="lab" for="txt">Văn bản cần kiểm tra</label>
+      <textarea id="txt" spellcheck="false"></textarea>
+      <div class="row">
+        <button class="primary" id="run">Kiểm tra<span class="arr">→</span></button>
+        <button id="clear">Xoá</button>
+        <span class="count" id="count">0 chữ</span>
+      </div>
+      <p class="err" id="err" hidden></p>
+      <div class="eyebrow">Đoạn văn đã tô màu</div>
+      <div class="legend">
+        <span><mark class="c">cụm sáo rỗng</mark></span>
+        <span><mark class="k">từ nối</mark> đầu câu</span>
+        <span><mark class="h">giọng nói thật</mark></span>
+        <span><mark class="s2">câu mô hình nghi là AI</mark></span>
+      </div>
+      <div class="out" id="out"><span style="color:var(--muted)">Kết quả tô màu sẽ hiện ở đây.</span></div>
+    </div>
+    <div class="panel result">
+      <div class="eyebrow">Xác suất do AI viết</div>
+      <div class="score">
+        <div class="dial" id="dial">–<small>%</small></div>
+        <div><span class="verdict v-mid" id="verdict">Chưa kiểm tra</span><div class="bar"><i id="pin" style="left:0%"></i></div></div>
+      </div>
+      <div class="modelinfo" id="modelinfo"></div>
+      <ul class="signals" id="signals"></ul>
+      <div class="eyebrow" id="topHead" hidden>Câu giống AI nhất</div>
+      <ul class="top" id="top"></ul>
+      <div class="warnings" id="warns"></div>
+    </div>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const color = v => v > .6 ? "var(--ai)" : v > .35 ? "var(--mid)" : "var(--human)";
+const NAMES = {burstiness:["Câu dài đều nhau","Người viết hay xen câu dài, câu ngắn."],cliches:["Cụm từ sáo rỗng","Hành trình, đóng vai trò quan trọng, chìa khóa..."],connectors:["Từ nối đầu câu","Bên cạnh đó, Hơn nữa, Tóm lại..."],human_voice:["Thiếu giọng nói thật","Ít tiểu từ, xưng hô thân mật, dấu ? !"],diversity:["Lặp từ vựng","Tỉ lệ chữ khác nhau thấp."],repetition:["Lặp cụm 3 chữ","Cụm ba chữ xuất hiện nhiều lần."]};
+const CLS = {cliche:"c", connector:"k", human:"h"};
+
+function paint(text, r) {
+  // Lớp 1: gạch chân câu bị mô hình nghi; lớp 2: tô cụm từ bên trong
+  let html = "", pos = 0;
+  const sents = r.sentences.filter(s => s.ai_probability != null && s.ai_probability >= 0.55);
+  const evts = [];
+  for (const s of sents) { evts.push([s.start, `<mark class="${s.ai_probability >= .75 ? "s2" : "s1"}" title="${Math.round(s.ai_probability*100)}% giống AI">`]); evts.push([s.end, "</mark>"]); }
+  for (const h of r.highlights) {
+    const inside = sents.some(s => h.start >= s.start && h.end <= s.end);
+    const crosses = sents.some(s => (h.start < s.start && h.end > s.start) || (h.start < s.end && h.end > s.end));
+    if (crosses) continue;
+    evts.push([h.start, `<mark class="${CLS[h.kind]}">`, 1]); evts.push([h.end, "</mark>", -1]);
+  }
+  evts.sort((a, b) => a[0] - b[0] || (a[1] === "</mark>" ? -1 : 1));
+  for (const [p, tag] of evts) { html += esc(text.slice(pos, p)) + tag; pos = p; }
+  return html + esc(text.slice(pos));
+}
+
+async function run() {
+  const text = $("txt").value;
+  $("err").hidden = true; $("run").disabled = true; $("run").textContent = "Đang chấm...";
+  try {
+    const res = await fetch("/api/check", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text})});
+    const r = await res.json();
+    if (!res.ok) throw new Error(r.error || res.statusText);
+    const p = Math.round(r.ai_probability * 100);
+    $("dial").innerHTML = p + "<small>%</small>"; $("pin").style.left = p + "%";
+    $("verdict").textContent = r.verdict;
+    $("verdict").className = "verdict " + (p >= 55 ? "v-ai" : p > 40 ? "v-mid" : "v-human");
+    $("count").textContent = r.words + " chữ · " + r.sentences_count + " câu";
+    $("modelinfo").textContent = r.model
+      ? `Binoculars ${r.model.binoculars.toFixed(3)} · ngưỡng ${r.model.threshold.toFixed(3)}${r.model.calibrated ? "" : " (chưa hiệu chỉnh)"} · perplexity ${r.model.perplexity.toFixed(1)} · ${r.model.tokens} token`
+      : "Không dùng mô hình, chỉ dấu hiệu văn phong.";
+    $("signals").innerHTML = Object.entries(r.signals).map(([k, v]) =>
+      `<li class="sig"><b>${NAMES[k][0]}</b><span class="val">${Math.round(v*100)}</span><div class="meter"><span style="width:${Math.round(v*100)}%;background:${color(v)}"></span></div><span class="note">${NAMES[k][1]}</span></li>`).join("");
+    const top = r.sentences.filter(s => s.ai_probability != null).sort((a, b) => b.ai_probability - a.ai_probability).slice(0, 3);
+    $("topHead").hidden = !top.length;
+    $("top").innerHTML = top.map(s => `<li><b>${Math.round(s.ai_probability*100)}%</b><span>${esc(s.text)}</span></li>`).join("");
+    $("warns").innerHTML = r.warnings.map(w => `<p class="warn">${esc(w)}</p>`).join("");
+    $("out").innerHTML = paint(text, r);
+  } catch (e) {
+    $("err").textContent = "Không chấm được: " + e.message; $("err").hidden = false;
+  } finally { $("run").disabled = false; $("run").innerHTML = "Kiểm tra<span class=\"arr\">→</span>"; }
+}
+$("run").onclick = run;
+$("clear").onclick = () => { $("txt").value = ""; $("txt").focus(); };
+$("txt").addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") run(); });
+</script>
+</body>
+</html>
