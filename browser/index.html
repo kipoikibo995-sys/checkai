@@ -168,12 +168,12 @@ details a { color: var(--accent); font-weight: 700; }
     <summary>How does this work?</summary>
     <ul>
       <li><b>Writing-style signals.</b> AI tends to write sentences of similar length, lean on buzzwords like "delve" or "seamless", open sentences with "Moreover" or "Furthermore", and avoid contractions and personal voice. These six signals run right in your browser.</li>
-      <li><b>Language model (local app only).</b> When you run <code>python -m aicheck serve</code>, two Qwen2.5 models score how predictable each word is using the Binoculars method. AI text is unusually predictable. The model counts for 70% of the score and also flags individual sentences.</li>
+      <li><b>Language model (full app only).</b> When the app runs with its server (<code>python -m aicheck serve</code> or the Hugging Face Space), two Qwen2.5 models score how predictable each word is using the Binoculars method. AI text is unusually predictable. The model counts for 70% of the score and also flags individual sentences.</li>
       <li><b>It is an estimate.</b> Formulaic human writing can look like AI, and AI text edited by hand can pass as human. Short texts under 120 words are unreliable. Never use a single score as proof.</li>
       <li><b>Second opinion.</b> Compare with <a href="https://gptzero.me" target="_blank" rel="noopener">GPTZero</a> or <a href="https://copyleaks.com/ai-content-detector" target="_blank" rel="noopener">Copyleaks</a>. If tools disagree, nobody knows for sure.</li>
     </ul>
   </details>
-  <p class="foot">Your text never leaves your device.</p>
+  <p class="foot" id="privacy">Your text never leaves your device.</p>
 </div>
 
 <script>
@@ -324,6 +324,8 @@ $("txt").addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.ke
       server = true;
       $("mode").classList.add("on");
       $("modeText").textContent = "Language model on" + (info.calibrated ? " · calibrated" : "");
+      if (!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))
+        $("privacy").textContent = "Your text is sent to this app's server to be scored. It is not saved.";
       run();
     } else if ("model" in info) {
       $("modeText").textContent = "Writing-style check · local app";

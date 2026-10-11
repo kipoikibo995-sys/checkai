@@ -69,6 +69,17 @@ echo "Paste text here..." | python -m aicheck check
 
 You can also pass any other pair with `--observer` and `--performer`, as long as both models come from the same family and share a vocabulary.
 
+## Run it online for free (Hugging Face Spaces)
+
+A free Hugging Face Space (CPU Basic) has enough memory for the `light` model pair, so you get a public link with the full model.
+
+1. Sign in at https://huggingface.co and click **New Space**.
+2. Name it (for example `checkai`), choose **Docker** as the SDK and **Blank** as the template, keep the free **CPU Basic** hardware, and create the Space.
+3. In the Space, open **Files**, click **Add file → Upload files**, and upload `deploy/huggingface/Dockerfile` from this repo. Optionally replace the Space's `README.md` with `deploy/huggingface/README.md`.
+4. The Space builds by itself. The first build downloads PyTorch and the models, so it takes a while. When it shows **Running**, the app is live at `https://huggingface.co/spaces/<your-name>/checkai`.
+
+To pick up new code from GitHub later, open the Space **Settings** and click **Factory rebuild**. On CPU each check takes a few seconds, and a free Space sleeps after a period without visitors, so the first visit after that is slow.
+
 ## Calibration (recommended)
 
 The default threshold of 0.90 comes from the original paper, which used different models, so it may be off for Qwen. To make CheckAI accurate for the kind of writing you check, calibrate it with your own samples:
@@ -99,6 +110,7 @@ aicheck/detector.py     combines scores, gives the verdict, handles calibration
 aicheck/server.py       local web server (standard library only)
 aicheck/web.html        web app UI; also works without the server
 aicheck/__main__.py     command line
+deploy/huggingface/     Dockerfile and Space settings for Hugging Face Spaces
 browser/index.html      copy of the web app for opening without Python
 samples/                one AI-style and one human-style sample
 tests/                  run with: python -m unittest discover -s tests
