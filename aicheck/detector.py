@@ -1,4 +1,4 @@
-"""Gộp điểm mô hình và điểm dấu hiệu thành một kết luận, kèm hiệu chỉnh ngưỡng."""
+"""Combine the model score and the style score into one verdict, with threshold calibration."""
 
 from __future__ import annotations
 
@@ -12,11 +12,11 @@ from . import heuristics
 
 CALIBRATION_FILE = Path(os.environ.get("AICHECK_CALIBRATION", Path.home() / ".aicheck" / "calibration.json"))
 
-# Ngưỡng mặc định khi chưa hiệu chỉnh. Bài báo Binoculars dùng ~0.90 với cặp Falcon-7B;
-# với mô hình khác ngưỡng sẽ lệch, nên hãy chạy `python -m aicheck calibrate`.
+# Threshold used before calibration. The Binoculars paper uses ~0.90 with a Falcon-7B pair;
+# other models drift from that, so run `python -m aicheck calibrate`.
 DEFAULT_THRESHOLD = 0.90
 DEFAULT_SCALE = 0.05
-MODEL_WEIGHT = 0.7  # tỉ trọng điểm mô hình khi gộp với điểm dấu hiệu
+MODEL_WEIGHT = 0.7  # share of the model score when combined with the style score
 MIN_WORDS = 120
 
 
@@ -44,14 +44,14 @@ def save_calibration(model_key: str, data: dict) -> Path:
 
 def verdict(p: float) -> str:
     if p >= 0.75:
-        return "Rất có thể do AI viết"
+        return "Likely AI-written"
     if p >= 0.55:
-        return "Nghiêng về AI"
+        return "Leans AI"
     if p > 0.40:
-        return "Lẫn lộn, khó nói"
+        return "Mixed signals"
     if p > 0.25:
-        return "Nghiêng về người viết"
-    return "Rất có thể do người viết"
+        return "Leans human"
+    return "Likely human-written"
 
 
 @dataclass
@@ -84,7 +84,7 @@ class Report:
 
 class Detector:
     def __init__(self, scorer=None):
-        """scorer: một BinocularsScorer, hoặc None để chỉ dùng dấu hiệu văn phong."""
+        """scorer: a BinocularsScorer, or None to use style signals only."""
         self.scorer = scorer
         self.calibration = load_calibration(scorer.model_key) if scorer else None
 
@@ -100,11 +100,12 @@ class Detector:
         return _sigmoid((self.threshold - b) / self.scale)
 
     def check(self, text: str) -> Report:
+        text = heuristics.normalize(text)
         h = heuristics.analyze(text)
         sents = heuristics.split_sentences(text)
         warnings = []
         if h.n_words < MIN_WORDS:
-            warnings.append(f"Văn bản chỉ có {h.n_words} chữ. Dưới {MIN_WORDS} chữ kết quả rất không chắc chắn.")
+            warnings.append(f"Only {h.n_words} words. Results under {MIN_WORDS} words are unreliable.")
 
         sent_reports = [SentenceReport(s.start, s.end, s.text, s.n_words) for s in sents]
         model_info = None
@@ -131,11 +132,11 @@ class Detector:
                 "model_probability": p_model,
             }
             if lm.truncated:
-                warnings.append(f"Văn bản dài, mô hình chỉ chấm {lm.tokens} token đầu.")
+                warnings.append(f"Long text: the model only scored the first {lm.tokens} tokens.")
             if not self.calibration:
-                warnings.append("Ngưỡng mô hình chưa được hiệu chỉnh cho máy này; xem mục Hiệu chỉnh trong README.")
+                warnings.append("The model threshold is not calibrated yet. See Calibration in the README.")
         elif not self.scorer:
-            warnings.append("Đang chạy không có mô hình ngôn ngữ, chỉ dựa vào dấu hiệu văn phong.")
+            warnings.append("Running without a language model, using writing-style signals only.")
 
         return Report(
             ai_probability=prob,
@@ -153,7 +154,7 @@ class Detector:
 
 
 def calibrate(scorer, human_texts: list[str], ai_texts: list[str]) -> dict:
-    """Tìm ngưỡng Binoculars tách tốt nhất hai nhóm văn bản mẫu của chính bạn."""
+    """Find the Binoculars threshold that best separates your own two sample sets."""
     hs = [scorer.score(t).binoculars for t in human_texts]
     ais = [scorer.score(t).binoculars for t in ai_texts]
     cands = sorted(hs + ais)

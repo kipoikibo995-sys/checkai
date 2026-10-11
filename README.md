@@ -1,23 +1,29 @@
-# Máy soi văn AI
+# CheckAI
 
-Chương trình kiểm tra một đoạn văn (tiếng Việt hoặc tiếng Anh) do AI hay người viết. Nó chạy hoàn toàn trên máy bạn, không gửi văn bản đi đâu, và có cả dòng lệnh lẫn giao diện web.
+Tell whether a piece of text was written by AI or by a person. CheckAI runs entirely on your own computer, never sends your text anywhere, and comes as a web app, a command-line tool, and a zero-install browser page.
 
-Kết quả là **xác suất**, không phải bằng chứng. Hãy dùng nó để tìm chỗ văn nghe máy móc rồi sửa, đừng dùng để kết tội ai.
+The result is a **probability, not proof**. Use it to find the parts of a text that sound machine-made and rewrite them, not to accuse anyone.
 
-## Chương trình chấm như thế nào
+## How it scores text
 
-Điểm cuối cùng gộp hai phần, mô hình chiếm 70%:
+The final score combines two parts. The language model counts for 70% when it is running.
 
-1. **Mô hình ngôn ngữ, theo phương pháp Binoculars** (Hans và cộng sự, 2024). Hai mô hình Qwen2.5 (bản base và bản instruct) cùng đọc văn bản:
-   - *log-perplexity*: từng chữ có dễ đoán với mô hình không. Văn AI thường rất dễ đoán.
-   - *cross-perplexity*: mức dễ đoán mà mô hình "kỳ vọng" ở vị trí đó.
-   - **Điểm Binoculars = log-perplexity ÷ cross-perplexity.** Điểm thấp hơn ngưỡng nghĩa là giống AI. Phép chia giúp không chấm nhầm những đề tài vốn dễ đoán như văn mẫu.
-   - Mỗi câu cũng được chấm riêng, nên bạn thấy câu nào bị nghi nhất.
-2. **Sáu dấu hiệu văn phong** (không cần mô hình): câu dài đều nhau, cụm từ sáo rỗng ("hành trình", "đóng vai trò quan trọng"), từ nối đầu câu ("Bên cạnh đó", "Hơn nữa"), thiếu giọng nói thật (nhé, á, thôi, mình), lặp từ vựng, lặp cụm 3 chữ.
+1. **A language model, using the Binoculars method** (Hans et al., 2024). Two Qwen2.5 models, a base and an instruct version, read the text:
+   - *log-perplexity* measures how predictable each word is to the model. AI text is unusually predictable.
+   - *cross-perplexity* measures how predictable the model expects text to be at that point.
+   - **Binoculars score = log-perplexity ÷ cross-perplexity.** Below the threshold means AI-like. Dividing by cross-perplexity stops naturally predictable topics, like formal or technical writing, from being flagged.
+   - Each sentence is scored on its own too, so you can see which sentences look most machine-made.
+2. **Six writing-style signals** that need no model:
+   - even sentence lengths
+   - AI buzzwords ("delve", "seamless", "a testament to")
+   - stock transitions at the start of sentences ("Moreover", "Furthermore")
+   - no personal voice (no contractions, first person or casual words)
+   - repeated vocabulary
+   - repeated three-word phrases
 
-## Cài đặt
+## Install
 
-Cần Python 3.10 trở lên.
+You need Python 3.10 or newer.
 
 ```bash
 git clone https://github.com/kipoikibo995-sys/checkai
@@ -25,75 +31,75 @@ cd checkai
 pip install -r requirements.txt
 ```
 
-Lần chạy đầu tiên chương trình sẽ tự tải mô hình từ Hugging Face (preset `nhe` khoảng 2 GB). Những lần sau dùng lại bản đã tải.
+The first run downloads the models from Hugging Face. The default `light` preset is about 2 GB, and later runs reuse the download.
 
-Không muốn cài mô hình? Thêm `--no-model` vào mọi lệnh. Khi đó chương trình chỉ dùng sáu dấu hiệu văn phong, chạy ngay mà không cần cài gì thêm.
+If you don't want to install the model libraries, add `--no-model` to any command. CheckAI then uses the six writing-style signals only and works with plain Python.
 
-## Sử dụng
+## Use it
 
-**Giao diện web** (dễ nhất):
+**Web app** (easiest):
 
 ```bash
 python -m aicheck serve
 ```
 
-Sau đó mở http://127.0.0.1:8000, dán văn bản và bấm Kiểm tra (hoặc Ctrl+Enter).
+Then open http://127.0.0.1:8000, paste your text and press **Check text** (or Ctrl+Enter).
 
-**Dòng lệnh:**
+**Command line:**
 
 ```bash
-python -m aicheck check samples/mau-ai.txt          # một tệp
-python -m aicheck check bai-viet/                   # cả thư mục .txt
-python -m aicheck check bai.txt --json > ketqua.json
-echo "Dán văn bản ở đây..." | python -m aicheck check
+python -m aicheck check samples/ai-sample.txt       # one file
+python -m aicheck check articles/                   # every .txt file in a folder
+python -m aicheck check post.txt --json > result.json
+echo "Paste text here..." | python -m aicheck check
 ```
 
-**Chọn mô hình:**
+**Browser only:** open `browser/index.html` directly, or turn on GitHub Pages for this repo to get a shareable link. This version uses the writing-style signals only.
 
-| Lựa chọn | Mô hình | Cần |
+### Choosing a model
+
+| Option | Models | Needs |
 |---|---|---|
-| `--preset nhe` (mặc định) | Qwen2.5-0.5B + Instruct | khoảng 4 GB RAM, chạy được trên CPU |
-| `--preset chuan` | Qwen2.5-1.5B + Instruct | khoảng 12 GB RAM, hoặc GPU 8 GB |
-| `--preset manh` | Qwen2.5-7B + Instruct | GPU từ 24 GB |
-| `--single` | chỉ dùng mô hình base | tốn một nửa bộ nhớ, kém chính xác hơn |
+| `--preset light` (default) | Qwen2.5-0.5B + Instruct | about 4 GB RAM, runs on CPU |
+| `--preset standard` | Qwen2.5-1.5B + Instruct | about 12 GB RAM, or an 8 GB GPU |
+| `--preset strong` | Qwen2.5-7B + Instruct | a GPU with 24 GB or more |
+| `--single` | base model only | half the memory, less accurate |
 
-Có thể chỉ định mô hình khác bằng `--observer` và `--performer`, miễn là hai mô hình cùng họ (chung bộ từ vựng).
+You can also pass any other pair with `--observer` and `--performer`, as long as both models come from the same family and share a vocabulary.
 
-## Hiệu chỉnh (nên làm)
+## Calibration (recommended)
 
-Ngưỡng mặc định 0,90 lấy từ bài báo gốc, vốn dùng mô hình khác, nên với Qwen nó có thể lệch. Để chương trình chính xác với loại văn bạn hay kiểm tra, hãy hiệu chỉnh bằng văn mẫu của chính bạn:
+The default threshold of 0.90 comes from the original paper, which used different models, so it may be off for Qwen. To make CheckAI accurate for the kind of writing you check, calibrate it with your own samples:
 
-1. Tạo thư mục `mau/nguoi/` chứa các tệp `.txt` bạn chắc chắn do người viết, ví dụ bài cũ trước năm 2022.
-2. Tạo thư mục `mau/ai/` chứa các tệp `.txt` do ChatGPT, Claude, Gemini… viết về cùng chủ đề.
-3. Nên có từ 20 tệp mỗi loại, mỗi tệp trên 150 chữ. Rồi chạy:
+1. Put `.txt` files you know were written by people in `samples/human/`. Older posts from before 2022 work well.
+2. Put `.txt` files written by ChatGPT, Claude, Gemini and similar tools on the same topics in `samples/ai/`.
+3. Aim for 20 or more files of each kind, each over 150 words. Then run:
 
 ```bash
-python -m aicheck calibrate --human mau/nguoi --ai mau/ai
+python -m aicheck calibrate --human samples/human --ai samples/ai
 ```
 
-Chương trình in ra ngưỡng mới cùng độ chính xác trên mẫu, rồi lưu vào `~/.aicheck/calibration.json`. Mọi lần kiểm tra sau với cùng cặp mô hình sẽ tự dùng ngưỡng này.
+CheckAI prints the new threshold and its accuracy on your samples, and saves it to `~/.aicheck/calibration.json`. Every later check with the same model pair uses it automatically.
 
-## Giới hạn cần biết
+## Limits
 
-- Đoạn văn dưới khoảng 120 chữ cho kết quả rất không chắc chắn.
-- Văn viết theo khuôn (báo cáo, văn mẫu, bài SEO) dễ bị chấm nhầm là AI.
-- Văn AI đã được người sửa nhiều, hoặc nhờ AI viết lại vài lượt, sẽ khó phát hiện.
-- Không có công cụ nào, kể cả GPTZero hay Turnitin, đúng 100%.
+- Texts under about 120 words give unreliable results.
+- Formulaic human writing, such as reports, templates or SEO copy, can be flagged as AI.
+- AI text that was heavily edited by hand, or rewritten by another AI, is hard to catch.
+- No detector is 100% accurate, including GPTZero and Turnitin.
 
-## Bản chạy trên trình duyệt
-
-`browser/index.html` là bản rút gọn chỉ dùng sáu dấu hiệu văn phong, không cần cài gì: mở thẳng tệp bằng trình duyệt, hoặc bật GitHub Pages cho repo để có đường link chia sẻ.
-
-## Cấu trúc thư mục
+## Project layout
 
 ```
-aicheck/heuristics.py   sáu dấu hiệu văn phong
-aicheck/model.py        chấm Binoculars bằng mô hình ngôn ngữ
-aicheck/detector.py     gộp điểm, kết luận, hiệu chỉnh ngưỡng
-aicheck/server.py       máy chủ web (thư viện chuẩn)
-aicheck/web.html        giao diện web
-aicheck/__main__.py     dòng lệnh
-samples/                hai đoạn văn mẫu
-browser/index.html      bản trình duyệt, không cần Python
-tests/                  kiểm thử: python -m unittest discover -s tests
+aicheck/heuristics.py   the six writing-style signals
+aicheck/model.py        Binoculars scoring with a language model
+aicheck/detector.py     combines scores, gives the verdict, handles calibration
+aicheck/server.py       local web server (standard library only)
+aicheck/web.html        web app UI; also works without the server
+aicheck/__main__.py     command line
+browser/index.html      copy of the web app for opening without Python
+samples/                one AI-style and one human-style sample
+tests/                  run with: python -m unittest discover -s tests
 ```
+
+The phrase lists in `aicheck/heuristics.py` are mirrored in `aicheck/web.html`. If you edit one, update the other and copy `web.html` to `browser/index.html`.

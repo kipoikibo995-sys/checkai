@@ -1,320 +1,335 @@
 <!doctype html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Máy soi văn AI</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800&display=swap">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CheckAI</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&display=swap">
 <style>
-/* Layout theo KoJi Launch: dải hero tối xanh mực, thân trang nền kem, thẻ trắng viền mảnh, nút viên thuốc cam */
+/* Layout: one calm centered column (input card, result card, explainer), KoJi Launch palette */
 :root {
-  --ink: #081c25;
-  --ink-deep: #030d17;
   --bg: #faf8f1;
   --surface: #ffffff;
+  --sunk: #f4f1e8;
   --fg: #081c25;
-  --muted: #4a5053;
+  --muted: #5d6468;
   --line: #e9e4d9;
   --accent: #f05216;
   --accent-2: #ff8e51;
   --gold: #f1b449;
-  --hero-fg: #ffffff;
-  --hero-muted: #c3d3df;
-  --ai: #f05216;
+  --ai: #e0480f;
   --ai-soft: #fde3d6;
-  --mid: #b7791f;
-  --mid-soft: #fbedcf;
+  --mid: #a86d12;
+  --mid-soft: #fbeccb;
   --human: #1f8a5b;
   --human-soft: #d9f0e3;
   --conn-soft: #dde8ef;
-  --display: "Be Vietnam Pro", "DM Sans", Arial, sans-serif;
-  --body: "Be Vietnam Pro", "DM Sans", Arial, sans-serif;
-  --mono: "Be Vietnam Pro", Arial, sans-serif;
+  --font: "DM Sans", "Segoe UI", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #030d17; --surface: #081c25; --fg: #eef2f4; --muted: #a9b8c3; --line: #16303c;
+  --bg: #030d17; --surface: #081c25; --sunk: #05141d; --fg: #eef2f4; --muted: #9fb0bb; --line: #17323e;
   --ai: #ff7a3d; --ai-soft: #3d1a0c; --mid: #f1b449; --mid-soft: #3a2b0e;
   --human: #4cc98b; --human-soft: #0f3324; --conn-soft: #12324a; color-scheme: dark; } }
 :root[data-theme="dark"] {
-  --bg: #030d17; --surface: #081c25; --fg: #eef2f4; --muted: #a9b8c3; --line: #16303c;
+  --bg: #030d17; --surface: #081c25; --sunk: #05141d; --fg: #eef2f4; --muted: #9fb0bb; --line: #17323e;
   --ai: #ff7a3d; --ai-soft: #3d1a0c; --mid: #f1b449; --mid-soft: #3a2b0e;
   --human: #4cc98b; --human-soft: #0f3324; --conn-soft: #12324a; color-scheme: dark; }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.6; }
-.hero { background: radial-gradient(120% 140% at 85% 0%, #0d2a37 0%, var(--ink-deep) 60%); color: var(--hero-fg); border-bottom: 1px solid #16303c; }
-.hero .inner { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 56px 48px; display: grid; gap: 14px; }
-.kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--hero-muted); }
-.hero h1 { font-family: var(--display); font-weight: 800; font-size: clamp(40px, 7vw, 72px); line-height: 1; letter-spacing: -0.035em; margin: 0; text-wrap: balance; }
-.hero h1 .dot { color: var(--accent); }
-.hero p { margin: 0; color: var(--hero-muted); font-size: 17px; max-width: 60ch; }
-.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 64px; display: grid; gap: 32px; }
-.tool { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; }
-@media (max-width: 820px) { .tool { grid-template-columns: minmax(0, 1fr); } }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; display: grid; gap: 14px; min-width: 0; }
-.panel.result { border-top: 3px solid var(--accent); }
-label.lab, .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted); font-weight: 700; }
-textarea { width: 100%; min-height: 260px; resize: vertical; font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; line-height: 1.65; }
-textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-button { font: inherit; font-weight: 700; font-size: 14px; border-radius: 999px; padding: 10px 20px; cursor: pointer; border: 1px solid var(--fg); background: transparent; color: var(--fg); transition: transform .15s, box-shadow .15s; }
-button:hover { transform: translateY(-1px); }
-button.primary { background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-color: transparent; color: #ffffff; box-shadow: 0 6px 18px -8px var(--accent); }
-button.primary .arr { margin-left: 10px; }
-button:disabled { opacity: .6; cursor: progress; transform: none; }
-.count { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.score { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; }
-.dial { font-family: var(--display); font-weight: 800; font-size: 56px; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
-.dial small { font-size: 18px; color: var(--muted); letter-spacing: 0; }
-.verdict { display: inline-block; padding: 4px 12px; border-radius: 99px; font-weight: 700; font-size: 13px; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+.page { max-width: 780px; margin: 0 auto; padding-inline: 18px; padding-block: 20px 56px; display: grid; gap: 20px; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { font-weight: 800; font-size: 18px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
+.brand .mark { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--accent-2), var(--accent)); display: grid; place-items: center; color: #ffffff; font-size: 14px; }
+.mode { font-size: 12px; font-weight: 500; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px; display: flex; align-items: center; gap: 6px; }
+.mode i { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.mode.on i { background: var(--human); }
+
+.intro h1 { font-size: clamp(30px, 6vw, 44px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.05; margin: 12px 0 8px; text-wrap: balance; }
+.intro h1 span { color: var(--accent); }
+.intro p { margin: 0; color: var(--muted); font-size: 16px; max-width: 58ch; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+textarea { width: 100%; min-height: 220px; resize: vertical; font: inherit; font-size: 16px; color: var(--fg); background: var(--sunk); border: 1px solid transparent; border-radius: 12px; padding: 14px 16px; line-height: 1.65; }
+textarea::placeholder { color: var(--muted); }
+textarea:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+.bar-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; margin-right: auto; }
+button { font: inherit; font-size: 14px; font-weight: 700; border-radius: 99px; padding: 9px 16px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+button:hover { border-color: var(--fg); }
+button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.go { background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-color: transparent; color: #ffffff; padding-inline: 22px; box-shadow: 0 8px 20px -10px var(--accent); }
+button.go:disabled { opacity: .65; cursor: progress; }
+button.link { border: 0; background: none; padding: 6px 8px; color: var(--muted); font-weight: 500; }
+button.link:hover { color: var(--accent); }
+
+.result { gap: 18px; }
+.headline { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; }
+.pct { font-size: 60px; font-weight: 800; letter-spacing: -0.05em; line-height: 0.9; font-variant-numeric: tabular-nums; }
+.pct small { font-size: 22px; letter-spacing: 0; color: var(--muted); font-weight: 700; }
+.verdict { display: inline-block; font-weight: 700; font-size: 14px; padding: 4px 12px; border-radius: 99px; }
 .v-ai { background: var(--ai-soft); color: var(--ai); }
 .v-mid { background: var(--mid-soft); color: var(--mid); }
 .v-human { background: var(--human-soft); color: var(--human); }
-.bar { height: 8px; border-radius: 99px; background: linear-gradient(90deg, var(--human), var(--gold), var(--accent)); position: relative; margin-top: 10px; }
-.bar i { position: absolute; top: -5px; width: 18px; height: 18px; background: var(--surface); border: 3px solid var(--fg); border-radius: 50%; transform: translateX(-9px); transition: left .3s; }
-.warn { font-size: 13px; color: var(--mid); margin: 0; }
-.signals { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
-.sig { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
-.sig:last-child { border-bottom: 0; padding-bottom: 0; }
-.sig b { font-weight: 700; }
-.sig .val { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
-.sig .note { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
-.meter { grid-column: 1 / -1; height: 5px; background: var(--line); border-radius: 99px; overflow: hidden; }
-.meter span { display: block; height: 100%; border-radius: 99px; }
-.chart { display: flex; align-items: flex-end; gap: 3px; height: 70px; border-bottom: 1px solid var(--line); overflow-x: auto; }
-.chart span { flex: 1 0 5px; background: linear-gradient(180deg, var(--accent-2), var(--accent)); border-radius: 4px 4px 0 0; min-height: 2px; }
-.out { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 360px; overflow-y: auto; }
-mark { border-radius: 4px; padding: 0 2px; color: inherit; }
+.scale { height: 8px; border-radius: 99px; background: linear-gradient(90deg, var(--human), var(--gold), var(--accent)); position: relative; margin-top: 12px; }
+.scale b { position: absolute; top: -5px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); border: 3px solid var(--fg); transform: translateX(-9px); transition: left .35s ease; }
+.ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 0.04em; }
+.meta { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+.label { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.signals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; margin: 0; padding: 0; list-style: none; }
+@media (max-width: 560px) { .signals { grid-template-columns: minmax(0, 1fr); } .headline { grid-template-columns: minmax(0, 1fr); gap: 10px; } .count { flex: 1 0 100%; } .bar-row .go { flex: 1 0 100%; order: 9; } }
+.sig { display: grid; gap: 4px; }
+.sig .row { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.sig .row span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+.meter { height: 5px; background: var(--sunk); border-radius: 99px; overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 99px; transition: width .35s ease; }
+
+.text { background: var(--sunk); border-radius: 12px; padding: 14px 16px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 340px; overflow-y: auto; font-size: 15px; }
+mark { color: inherit; border-radius: 4px; padding: 0 2px; }
 mark.c { background: var(--ai-soft); }
 mark.k { background: var(--conn-soft); }
 mark.h { background: var(--human-soft); }
-.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--muted); }
-.legend mark { font-size: 12px; }
-.section-title { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 4vw, 40px); letter-spacing: -0.03em; line-height: 1.1; margin: 0; text-wrap: balance; }
-.explain { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-.explain section { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 16px; padding: 22px; }
-.explain h2 { font-family: var(--display); font-weight: 700; font-size: 19px; letter-spacing: -0.01em; margin: 0 0 12px; text-wrap: balance; }
-.explain ul { padding: 0; margin: 0; list-style: none; display: grid; gap: 10px; }
-.explain li { position: relative; padding-left: 18px; font-size: 14px; }
-.explain li::before { content: ""; position: absolute; left: 0; top: .6em; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-.explain a { color: var(--accent); font-weight: 700; }
-.term { font-weight: 700; }
-.foot { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 18px; max-width: 80ch; margin: 0; }
-@media (prefers-reduced-motion: reduce) { .bar i, button { transition: none; } button:hover { transform: none; } }
+mark.s1 { background: none; padding: 0; border-bottom: 2px solid var(--gold); border-radius: 0; }
+mark.s2 { background: none; padding: 0; border-bottom: 2px solid var(--accent); border-radius: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.top3 { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.top3 li { display: grid; grid-template-columns: 3em 1fr; gap: 8px; }
+.top3 b { color: var(--ai); font-variant-numeric: tabular-nums; }
+.note { margin: 0; font-size: 13px; color: var(--mid); }
+.err { margin: 0; font-size: 14px; color: var(--ai); }
+
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 4px 18px; }
+summary { cursor: pointer; font-weight: 700; padding: 12px 0; list-style: none; display: flex; justify-content: space-between; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; color: var(--accent); font-size: 20px; line-height: 1; }
+details[open] summary::after { content: "–"; }
+details ul { margin: 0 0 16px; padding-left: 18px; display: grid; gap: 8px; color: var(--fg); }
+details li::marker { color: var(--accent); }
+details a { color: var(--accent); font-weight: 700; }
+.foot { font-size: 12px; color: var(--muted); text-align: center; margin: 0; }
+@media (prefers-reduced-motion: reduce) { .scale b, .meter i { transition: none; } }
 </style>
 </head>
 <body>
-
-
-<section class="hero"><div class="inner">
-  <div class="kicker">KoJi Tools · Kiểm tra nội dung</div>
-  <h1>Soi văn AI<span class="dot">.</span></h1>
-  <p>Dán đoạn văn vào ô bên dưới. Công cụ đo các dấu hiệu mà văn AI thường có và tô màu những cụm từ đáng ngờ. Kết quả là ước lượng, không phải bằng chứng.</p>
-</div></section>
-<div class="wrap">
-
-  <div class="tool">
-    <div class="panel">
-      <label class="lab" for="txt">Văn bản cần kiểm tra</label>
-      <textarea id="txt" spellcheck="false"></textarea>
-      <div class="row">
-        <button class="primary" id="run">Kiểm tra<span class="arr">→</span></button>
-        <button id="sampleAi">Mẫu kiểu AI</button>
-        <button id="sampleHuman">Mẫu kiểu người viết</button>
-        <button id="clear">Xoá</button>
-        <span class="count" id="count">0 chữ</span>
-      </div>
-      <div class="eyebrow">Đoạn văn đã tô màu</div>
-      <div class="legend">
-        <span><mark class="c">cụm sáo rỗng</mark> hay gặp ở AI</span>
-        <span><mark class="k">từ nối</mark> đầu câu</span>
-        <span><mark class="h">giọng nói thật</mark> (tiểu từ, xưng hô)</span>
-      </div>
-      <div class="out" id="out"></div>
-    </div>
-
-    <div class="panel result">
-      <div class="eyebrow">Mức giống AI</div>
-      <div class="score">
-        <div class="dial" id="dial">0<small>/100</small></div>
-        <div>
-          <span class="verdict" id="verdict">Chưa có</span>
-          <div class="bar"><i id="pin" style="left:0%"></i></div>
-        </div>
-      </div>
-      <p class="warn" id="warn" hidden>Đoạn văn dưới 120 chữ nên kết quả rất không chắc chắn.</p>
-      <ul class="signals" id="signals"></ul>
-      <div class="eyebrow">Độ dài từng câu (số chữ)</div>
-      <div class="chart" id="chart" aria-label="Biểu đồ độ dài câu"></div>
-    </div>
+<div class="page">
+  <div class="top">
+    <div class="brand"><span class="mark" aria-hidden="true">✓</span>CheckAI</div>
+    <div class="mode" id="mode"><i></i><span id="modeText">Writing-style check</span></div>
   </div>
 
-  <h2 class="section-title">Các công cụ check AI hoạt động thế nào<span style="color:var(--accent)">?</span></h2>
-  <div class="explain">
-    <section>
-      <h2>Các công cụ check AI dựa trên gì?</h2>
-      <ul>
-        <li><span class="term">Perplexity (độ bất ngờ)</span>: cho một mô hình ngôn ngữ đọc văn bản và đo xem từng chữ có dễ đoán không. AI chọn chữ "an toàn", dễ đoán nên perplexity thấp. Người viết hay dùng chữ bất ngờ hơn.</li>
-        <li><span class="term">Burstiness (độ nhấp nhô)</span>: người viết câu dài câu ngắn xen kẽ, AI viết các câu dài na ná nhau. Công cụ này đo chỉ số này trực tiếp.</li>
-        <li><span class="term">Mô hình phân loại</span>: GPTZero, Originality, Copyleaks huấn luyện một mạng nơ-ron trên hàng triệu đoạn văn người viết và AI viết, rồi cho nó đoán.</li>
-        <li><span class="term">Watermark (dấu ẩn)</span>: một số nhà cung cấp AI cài mẫu thống kê ẩn vào cách chọn chữ (ví dụ SynthID của Google). Chỉ dò được nếu có công cụ của đúng nhà cung cấp đó.</li>
-      </ul>
-    </section>
-    <section>
-      <h2>Vì sao không công cụ nào chắc chắn?</h2>
-      <ul>
-        <li>Văn người viết theo khuôn (văn mẫu, báo cáo, bài SEO) thường bị chấm nhầm là AI.</li>
-        <li>Người không viết bằng tiếng mẹ đẻ bị chấm nhầm nhiều hơn hẳn, vì câu chữ đơn giản và dễ đoán.</li>
-        <li>Chỉ cần sửa tay hoặc nhờ AI viết lại vài lượt là điểm thay đổi nhiều.</li>
-        <li>Hầu hết công cụ được huấn luyện chủ yếu trên tiếng Anh, nên với tiếng Việt độ chính xác thấp hơn.</li>
-        <li>Đoạn càng ngắn càng khó đoán. Dưới khoảng 150 chữ thì gần như chỉ để tham khảo.</li>
-      </ul>
-    </section>
-    <section>
-      <h2>Công cụ nên thử thêm</h2>
-      <ul>
-        <li><a href="https://gptzero.me" target="_blank" rel="noopener">GPTZero</a>: phổ biến, có bản miễn phí, chỉ ra câu nào bị nghi.</li>
-        <li><a href="https://originality.ai" target="_blank" rel="noopener">Originality.ai</a>: trả phí, hay dùng cho nội dung web và SEO.</li>
-        <li><a href="https://copyleaks.com/ai-content-detector" target="_blank" rel="noopener">Copyleaks</a>: hỗ trợ nhiều ngôn ngữ, có tiếng Việt.</li>
-        <li>Mẹo: thử cùng một đoạn trên 2 đến 3 công cụ. Nếu kết quả trái nhau thì nghĩa là không ai chắc cả.</li>
-      </ul>
-    </section>
+  <div class="intro">
+    <h1>Was this written by AI<span>?</span></h1>
+    <p>Paste any text and get a quick read on whether it sounds machine-made, plus the exact phrases that give it away.</p>
   </div>
 
-  <p class="foot">Công cụ này chạy hoàn toàn trên trình duyệt của bạn, không gửi văn bản đi đâu. Nó không dùng mô hình ngôn ngữ nên không đo được perplexity thật; điểm số là tổng có trọng số của sáu dấu hiệu bên phải. Dùng nó để biết đoạn văn "nghe máy móc" ở chỗ nào và sửa cho tự nhiên hơn, đừng dùng để kết tội ai.</p>
+  <div class="card">
+    <label for="txt" class="label">Your text</label>
+    <textarea id="txt" spellcheck="false" placeholder="Paste an essay, post, email or page copy here. 150+ words gives the best result."></textarea>
+    <div class="bar-row">
+      <span class="count" id="count">0 words</span>
+      <button class="link" id="sAi" type="button">AI sample</button>
+      <button class="link" id="sHu" type="button">Human sample</button>
+      <button class="link" id="clear" type="button">Clear</button>
+      <button class="go" id="run" type="button">Check text</button>
+    </div>
+    <p class="err" id="err" hidden></p>
+  </div>
+
+  <div class="card result" id="result" hidden>
+    <div class="headline">
+      <div class="pct" id="pct">0<small>%</small></div>
+      <div>
+        <span class="verdict v-mid" id="verdict">–</span>
+        <div class="scale"><b id="pin" style="left:0%"></b></div>
+        <div class="ends"><span>HUMAN</span><span>AI</span></div>
+      </div>
+    </div>
+    <div class="meta" id="meta"></div>
+    <div id="notes"></div>
+
+    <div class="label">Why</div>
+    <ul class="signals" id="signals"></ul>
+
+    <div class="label" id="topLabel" hidden>Most AI-like sentences</div>
+    <ul class="top3" id="top3"></ul>
+
+    <div class="label">Your text, annotated</div>
+    <div class="legend">
+      <span><mark class="c">buzzword</mark></span>
+      <span><mark class="k">stock transition</mark></span>
+      <span><mark class="h">personal voice</mark></span>
+      <span id="lgModel" hidden><mark class="s2">flagged by model</mark></span>
+    </div>
+    <div class="text" id="out"></div>
+  </div>
+
+  <details>
+    <summary>How does this work?</summary>
+    <ul>
+      <li><b>Writing-style signals.</b> AI tends to write sentences of similar length, lean on buzzwords like "delve" or "seamless", open sentences with "Moreover" or "Furthermore", and avoid contractions and personal voice. These six signals run right in your browser.</li>
+      <li><b>Language model (local app only).</b> When you run <code>python -m aicheck serve</code>, two Qwen2.5 models score how predictable each word is using the Binoculars method. AI text is unusually predictable. The model counts for 70% of the score and also flags individual sentences.</li>
+      <li><b>It is an estimate.</b> Formulaic human writing can look like AI, and AI text edited by hand can pass as human. Short texts under 120 words are unreliable. Never use a single score as proof.</li>
+      <li><b>Second opinion.</b> Compare with <a href="https://gptzero.me" target="_blank" rel="noopener">GPTZero</a> or <a href="https://copyleaks.com/ai-content-detector" target="_blank" rel="noopener">Copyleaks</a>. If tools disagree, nobody knows for sure.</li>
+    </ul>
+  </details>
+  <p class="foot">Your text never leaves your device.</p>
 </div>
 
 <script>
-const SAMPLE_AI = `Trong thế giới đầy biến động ngày nay, những câu nói truyền cảm hứng đóng vai trò quan trọng trong việc nuôi dưỡng tâm hồn mỗi người. FantasyQuote không chỉ là một kênh YouTube mà còn là người bạn đồng hành trên hành trình khám phá bản thân. Mỗi video được chăm chút tỉ mỉ nhằm mang đến trải nghiệm sâu sắc và đầy ý nghĩa cho khán giả.
+const SAMPLE_AI = `In today's fast-paced world, finding moments of inspiration plays a crucial role in maintaining a healthy mindset. FantasyQuote is not only a YouTube channel but also a trusted companion on your journey of self-discovery. Each video is meticulously crafted to deliver a profound and meaningful experience for viewers.
 
-Bên cạnh đó, kênh còn cung cấp đa dạng chủ đề từ tình yêu, cuộc sống đến thành công. Hơn nữa, giọng đọc truyền cảm kết hợp cùng hình ảnh tuyệt đẹp giúp người xem dễ dàng kết nối với từng thông điệp. Ngoài ra, nội dung được cập nhật thường xuyên để đáp ứng nhu cầu ngày càng cao của cộng đồng.
+Moreover, the channel offers a wide range of topics, from love and life to success and resilience. Furthermore, the soothing narration combined with captivating visuals helps viewers seamlessly connect with every message. Additionally, new content is released regularly to meet the ever-evolving needs of the community.
 
-Tóm lại, FantasyQuote chính là chìa khóa giúp bạn tìm thấy nguồn động lực mỗi ngày. Hãy cùng khám phá và lan tỏa những giá trị tích cực đến với mọi người xung quanh. Đừng quên đăng ký kênh để không bỏ lỡ bất kỳ video hấp dẫn nào nhé.`;
+In conclusion, FantasyQuote serves as a beacon of motivation for anyone looking to elevate their daily routine. Whether you're seeking comfort, clarity, or a fresh perspective, this channel empowers you to unlock your full potential. Embrace the journey and share these valuable insights with the people around you. Don't forget to subscribe so you never miss a transformative video.`;
+const SAMPLE_HUMAN = `When I started the channel I honestly didn't think anyone would watch. Most nights I was up until 2am going through quotes, reading them out loud, and tossing anything that sounded too cheesy.
 
-const SAMPLE_HUMAN = `Hồi đầu làm kênh mình chả nghĩ sẽ có ai xem đâu. Đêm nào cũng ngồi lọc quote tới 2 giờ sáng, đọc đi đọc lại, câu nào nghe sến quá là bỏ.
+The first video got 37 views. Thirty-seven! Probably ten of those were me and my little brother.
 
-Video đầu tiên được đúng 37 view. Ba mươi bảy! Trong đó chắc chục view là của mình với đứa em.
+Then someone left a comment, something like "this one got me through the week." I just sat there staring at it for a while. That's kind of when I decided to keep going, even if it's slow. I only post a quote if I actually believe it.
 
-Rồi có một bạn để lại bình luận, kiểu "câu này cứu mình tuần này". Đọc xong ngồi ngẩn ra luôn á. Từ đó mình quyết làm tiếp, chậm cũng được, miễn là câu nào đưa lên cũng là câu mình thật sự thấy đúng.
+The channel's a bit bigger now, but I still do it the same way. If you've got a quote you love, send it over. I read every single one, I promise.`;
 
-Giờ kênh lớn hơn chút rồi, nhưng cách làm thì vẫn vậy thôi. Bạn nào có câu quote hay thì gửi mình nha, mình đọc hết đó.`;
-
-const CLICHES = [
-  "trong thế giới","ngày nay","đóng vai trò quan trọng","vai trò quan trọng","không chỉ","mà còn","hành trình","khám phá","trải nghiệm","đầy ý nghĩa","sâu sắc","tỉ mỉ","chìa khóa","chìa khoá","nâng tầm","lan tỏa","lan toả","giá trị tích cực","đa dạng","tối ưu","hiệu quả","một cách","không thể phủ nhận","điều quan trọng là","đáp ứng nhu cầu","ngày càng","tuyệt vời","tuyệt đẹp","hấp dẫn","đồng hành","nguồn cảm hứng","truyền cảm hứng","động lực","hãy cùng","đừng quên","bất kỳ","góp phần","mang đến","mang lại","nhằm","giúp bạn","tìm thấy","kết nối","thông điệp","bí quyết","toàn diện","vượt trội","đột phá","in today's world","delve","tapestry","it's important to note","it is important to note","in conclusion","navigate","landscape","embark","journey","unlock","elevate","seamless","vibrant","testament","plays a crucial role","crucial","pivotal","foster","realm"
-];
-const CONNECTORS = ["bên cạnh đó","hơn nữa","ngoài ra","tóm lại","nhìn chung","cuối cùng","thêm vào đó","đặc biệt","không những thế","vì vậy","do đó","tuy nhiên","nói tóm lại","trước hết","đầu tiên","thứ hai","moreover","furthermore","additionally","however","overall","in addition","firstly","finally","ultimately"];
-const HUMAN = ["mình","tui","tớ","bọn mình","tụi mình","nhé","nha","nhỉ","ạ","á","hả","hở","đấy","đó","thôi","luôn","chả","chẳng","kiểu","ủa","ơi","trời","haha","hihi","kkk","lol","chứ","mà","vậy","chắc","hồi","đứa","tao","mày"];
+// Same lists, weights and thresholds as aicheck/heuristics.py. Keep both in sync.
+const CLICHES = ["delve","delves","delving","tapestry","testament to","it's important to note","it is important to note","it's worth noting","it is worth noting","in today's fast-paced world","in today's digital age","in today's world","ever-evolving","ever-changing","fast-paced","navigate the complexities","navigating","landscape","embark","journey","unlock","unleash","elevate","seamless","seamlessly","vibrant","plays a crucial role","plays a vital role","crucial","pivotal","foster","fostering","realm","robust","leverage","harness","empower","empowering","transformative","game-changer","game changer","cutting-edge","dive into","let's dive","a myriad of","myriad","plethora","showcase","showcasing","underscore","underscores","intricate","meticulous","meticulously","comprehensive","holistic","paramount","resonate","resonates","bustling","beacon","symphony","nestled","look no further","rest assured","not only","but also","stands as","serves as","boasts","captivating","invaluable","valuable insights","to the next level","embrace","thrive","endeavor","unwavering","profound","enhance","streamline","optimize","innovative","dynamic","whether you're","in the world of","when it comes to","a wide range of","trong thế giới","đóng vai trò quan trọng","không chỉ","mà còn","hành trình","khám phá","trải nghiệm","đầy ý nghĩa","chìa khóa","nâng tầm","lan tỏa","đa dạng","tối ưu","không thể phủ nhận","đáp ứng nhu cầu","hãy cùng","đồng hành"];
+const CONNECTORS = ["moreover","furthermore","additionally","however","overall","in addition","firstly","secondly","lastly","finally","ultimately","in conclusion","in summary","to summarize","consequently","therefore","thus","notably","importantly","as a result","on the other hand","that said","by contrast","in essence","bên cạnh đó","hơn nữa","ngoài ra","tóm lại","nhìn chung","cuối cùng","tuy nhiên"];
+const HUMAN = ["i'm","i've","i'd","i'll","don't","can't","won't","didn't","isn't","wasn't","couldn't","wouldn't","shouldn't","gonna","wanna","gotta","kinda","sorta","yeah","yep","nope","lol","lmao","haha","honestly","tbh","idk","btw","ok","okay","stuff","anyway","anyways","dunno","ugh","wow","damn","pretty much","i guess","i mean","you know","i","my","me","mình","tui","nhé","nha","nhỉ","á","thôi","chả","kiểu","ủa"];
+const WEIGHTS = {burstiness: .22, cliches: .28, connectors: .15, human_voice: .17, diversity: .09, repetition: .09};
+const LABELS = {burstiness: "Even sentence lengths", cliches: "AI buzzwords", connectors: "Stock transitions", human_voice: "No personal voice", diversity: "Repeated vocabulary", repetition: "Repeated phrases"};
 
 const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const mkRe = list => new RegExp("(?<![\\p{L}\\p{N}])(" + list.slice().sort((a,b)=>b.length-a.length).map(esc).join("|") + ")(?![\\p{L}\\p{N}])", "giu");
-const RE_C = mkRe(CLICHES), RE_H = mkRe(HUMAN);
-const RE_K = new RegExp("(^|[.!?…\\n]\\s*)(" + CONNECTORS.slice().sort((a,b)=>b.length-a.length).map(esc).join("|") + ")(?![\\p{L}])", "giu");
+const alt = l => [...new Set(l)].sort((a, b) => b.length - a.length).map(esc).join("|");
+const W = "[\\p{L}\\p{N}_]";
+const RE_C = new RegExp(`(?<!${W})(${alt(CLICHES)})(?!${W})`, "giu");
+const RE_H = new RegExp(`(?<![\\p{L}\\p{N}_'])(${alt(HUMAN)})(?![\\p{L}\\p{N}_'])`, "giu");
+const RE_K = new RegExp(`(^|[.!?…\\n]\\s*)(${alt(CONNECTORS)})(?!${W})`, "giu");
+const RE_WORD = /[\p{L}\p{N}_']+/gu;
+const lin = (x, lo, hi) => Math.max(0, Math.min(1, (x - lo) / (hi - lo)));
+const words = t => t.toLowerCase().match(RE_WORD) || [];
+const count = (re, t) => (t.match(re) || []).length;
+const normalize = t => t.replace(/[‘’]/g, "'");
+
+function sentences(t) {
+  const out = []; const re = /(?<=[.!?…])\s+|\n+/gu; let pos = 0, m;
+  const src = t + "\n";
+  while ((m = re.exec(src))) {
+    const chunk = src.slice(pos, m.index), s = chunk.trim();
+    if (s && words(s).length) { const a = pos + chunk.indexOf(s); out.push({start: a, end: a + s.length, text: s, words: words(s).length}); }
+    pos = m.index + m[0].length;
+  }
+  return out;
+}
+
+function localCheck(raw) {
+  const t = normalize(raw), w = words(t), n = w.length, sents = sentences(t), lens = sents.map(s => s.words);
+  const mean = lens.reduce((a, b) => a + b, 0) / (lens.length || 1);
+  const sd = Math.sqrt(lens.reduce((a, b) => a + (b - mean) ** 2, 0) / (lens.length || 1));
+  const cv = mean ? sd / mean : 0;
+  const win = Math.min(50, n); let mattr = 0;
+  if (n >= 10) { let s = 0, k = 0; for (let i = 0; i + win <= n; i += 5) { s += new Set(w.slice(i, i + win)).size / win; k++; } mattr = s / k; }
+  const tri = {}; for (let i = 0; i + 2 < n; i++) { const g = w[i] + " " + w[i+1] + " " + w[i+2]; tri[g] = (tri[g] || 0) + 1; }
+  const triRep = Object.values(tri).filter(c => c > 1).reduce((a, c) => a + c, 0) / Math.max(1, n - 2);
+  const per100 = x => n ? x / n * 100 : 0;
+  const cl = count(RE_C, t), kn = count(RE_K, t), hm = count(RE_H, t) + count(/[?!]|\.\.\.|…/g, t);
+  const signals = {
+    burstiness: 1 - lin(cv, .30, .75), cliches: lin(per100(cl), .5, 4), connectors: lin(sents.length ? kn / sents.length : 0, .05, .30),
+    human_voice: 1 - lin(per100(hm), .5, 4), diversity: 1 - lin(mattr, .62, .85), repetition: lin(triRep, .02, .15),
+  };
+  let p = 0; for (const k in WEIGHTS) p += WEIGHTS[k] * signals[k];
+  const hl = [];
+  const grab = (re, kind, g) => { re.lastIndex = 0; let m; while ((m = re.exec(t))) {
+    const s = g ? m.index + m[1].length : m.index, str = g ? m[2] : m[0];
+    hl.push({start: s, end: s + str.length, kind}); if (!m[0].length) re.lastIndex++; } };
+  grab(RE_K, "connector", true); grab(RE_C, "cliche"); grab(RE_H, "human");
+  hl.sort((a, b) => a.start - b.start || (b.end - b.start) - (a.end - a.start));
+  const merged = []; let pos = 0; for (const h of hl) if (h.start >= pos) { merged.push(h); pos = h.end; }
+  const warnings = n < 120 ? [`Only ${n} words. Results under 120 words are unreliable.`] : [];
+  return {ai_probability: p, verdict: verdictFor(p), words: n, sentences_count: sents.length, signals, highlights: merged,
+          sentences: sents.map(s => ({...s, ai_probability: null})), model: null, warnings};
+}
+function verdictFor(p) {
+  return p >= .75 ? "Likely AI-written" : p >= .55 ? "Leans AI" : p > .40 ? "Mixed signals" : p > .25 ? "Leans human" : "Likely human-written";
+}
 
 const $ = id => document.getElementById(id);
-const clamp = (x, a=0, b=1) => Math.max(a, Math.min(b, x));
-const lin = (x, lo, hi) => clamp((x - lo) / (hi - lo)); // 0 at lo, 1 at hi
+const html = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const tone = v => v > .6 ? "var(--ai)" : v > .35 ? "var(--gold)" : "var(--human)";
+const CLS = {cliche: "c", connector: "k", human: "h"};
+let server = false;
 
-function words(t) { return (t.toLowerCase().match(/[\p{L}\p{N}']+/gu) || []); }
-function sentences(t) {
-  return t.split(/(?<=[.!?…])\s+|\n+/u).map(s => s.trim()).filter(s => words(s).length > 0);
-}
-function count(re, t) { re.lastIndex = 0; return (t.match(re) || []).length; }
-
-function analyze(t) {
-  const w = words(t), n = w.length;
-  const sents = sentences(t), lens = sents.map(s => words(s).length);
-  const mean = lens.reduce((a,b)=>a+b,0) / (lens.length || 1);
-  const sd = Math.sqrt(lens.reduce((a,b)=>a+(b-mean)**2,0) / (lens.length || 1));
-  const cv = mean ? sd / mean : 0;
-
-  // MATTR: độ đa dạng từ trung bình trên cửa sổ trượt 50 chữ
-  const W = Math.min(50, n);
-  let mattr = 0;
-  if (n >= 10) {
-    let sum = 0, k = 0;
-    for (let i = 0; i + W <= n; i += 5) { sum += new Set(w.slice(i, i+W)).size / W; k++; }
-    mattr = sum / k;
-  }
-
-  // Cụm 3 chữ lặp lại
-  const tri = {};
-  for (let i = 0; i + 2 < n; i++) { const g = w[i]+" "+w[i+1]+" "+w[i+2]; tri[g] = (tri[g]||0) + 1; }
-  const triTotal = Math.max(1, n - 2);
-  const triRep = Object.values(tri).filter(c => c > 1).reduce((a,c)=>a+c,0) / triTotal;
-
-  const per100 = x => n ? x / n * 100 : 0;
-  const cl = count(RE_C, t), kn = count(RE_K, t), hm = count(RE_H, t);
-  const punct = (t.match(/[?!]|\.\.\.|…/g) || []).length;
-  const clRate = per100(cl), knRate = sents.length ? kn / sents.length : 0, hmRate = per100(hm + punct);
-
-  const s = {
-    burst: 1 - lin(cv, 0.3, 0.75),
-    clich: lin(clRate, 0.5, 4),
-    conn: lin(knRate, 0.05, 0.3),
-    human: 1 - lin(hmRate, 0.5, 4),
-    div: 1 - lin(mattr, 0.62, 0.85),
-    rep: lin(triRep, 0.02, 0.15),
-  };
-  const wts = { burst: .22, clich: .28, conn: .15, human: .17, div: .09, rep: .09 };
-  let score = 0; for (const k in wts) score += wts[k] * s[k];
-  return { n, sents, lens, mean, cv, mattr, triRep, cl, clRate, kn, knRate, hm, hmRate, s, score: Math.round(score * 100) };
+function annotate(text, r) {
+  const flagged = r.sentences.filter(s => s.ai_probability != null && s.ai_probability >= .55);
+  const ev = [];
+  flagged.forEach(s => { ev.push([s.start, 0, `<mark class="${s.ai_probability >= .75 ? "s2" : "s1"}" title="${Math.round(s.ai_probability * 100)}% AI-like">`]); ev.push([s.end, -1, "</mark>"]); });
+  r.highlights.forEach(h => {
+    if (flagged.some(s => h.start < s.end && h.end > s.start && !(h.start >= s.start && h.end <= s.end))) return;
+    ev.push([h.start, 1, `<mark class="${CLS[h.kind]}">`]); ev.push([h.end, -2, "</mark>"]);
+  });
+  ev.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  let out = "", pos = 0; for (const [p, , tag] of ev) { out += html(text.slice(pos, p)) + tag; pos = p; }
+  return out + html(text.slice(pos));
 }
 
-function highlight(t) {
-  const ranges = [];
-  const push = (re, cls, grp) => { re.lastIndex = 0; let m; while ((m = re.exec(t))) {
-    const off = grp ? m.index + m[1].length : m.index, str = grp ? m[2] : m[0];
-    if (str) ranges.push([off, off + str.length, cls]); if (m[0].length === 0) re.lastIndex++; } };
-  push(RE_K, "k", true); push(RE_C, "c"); push(RE_H, "h");
-  ranges.sort((a,b) => a[0]-b[0] || b[1]-a[1]);
-  let out = "", pos = 0;
-  const h = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  for (const [a,b,c] of ranges) { if (a < pos) continue; out += h(t.slice(pos,a)) + `<mark class="${c}">${h(t.slice(a,b))}</mark>`; pos = b; }
-  return out + h(t.slice(pos));
+function show(text, r) {
+  const p = Math.round(r.ai_probability * 100);
+  $("result").hidden = false;
+  $("pct").innerHTML = p + "<small>%</small>";
+  $("pin").style.left = p + "%";
+  $("verdict").textContent = r.verdict;
+  $("verdict").className = "verdict " + (p >= 55 ? "v-ai" : p > 40 ? "v-mid" : "v-human");
+  $("meta").textContent = `${r.words} words · ${r.sentences_count} sentences` + (r.model
+    ? ` · Binoculars ${r.model.binoculars.toFixed(3)} (threshold ${r.model.threshold.toFixed(3)}${r.model.calibrated ? "" : ", not calibrated"})`
+    : " · writing-style signals only");
+  $("notes").innerHTML = r.warnings.map(w => `<p class="note">${html(w)}</p>`).join("");
+  $("signals").innerHTML = Object.entries(r.signals).map(([k, v]) =>
+    `<li class="sig"><div class="row"><span>${LABELS[k]}</span><span>${Math.round(v * 100)}</span></div><div class="meter"><i style="width:${Math.round(v * 100)}%;background:${tone(v)}"></i></div></li>`).join("");
+  const top = r.sentences.filter(s => s.ai_probability != null).sort((a, b) => b.ai_probability - a.ai_probability).slice(0, 3);
+  $("topLabel").hidden = !top.length; $("lgModel").hidden = !top.length;
+  $("top3").innerHTML = top.map(s => `<li><b>${Math.round(s.ai_probability * 100)}%</b><span>${html(s.text)}</span></li>`).join("");
+  $("out").innerHTML = annotate(text, r);
 }
 
-const color = v => v > .6 ? "var(--ai)" : v > .35 ? "var(--mid)" : "var(--human)";
-
-function render() {
-  const t = $("txt").value;
-  try { localStorage.setItem("aicheck-draft", t); } catch (e) {}
-  const r = analyze(t);
-  $("count").textContent = r.n + " chữ · " + r.sents.length + " câu";
-  $("out").innerHTML = t.trim() ? highlight(t) : '<span style="color:var(--muted)">Kết quả tô màu sẽ hiện ở đây.</span>';
-  if (r.n < 15) {
-    $("dial").innerHTML = "–<small>/100</small>"; $("verdict").textContent = "Cần thêm chữ"; $("verdict").className = "verdict v-mid";
-    $("pin").style.left = "0%"; $("signals").innerHTML = ""; $("chart").innerHTML = ""; $("warn").hidden = true; return;
-  }
-  $("warn").hidden = r.n >= 120;
-  $("dial").innerHTML = r.score + "<small>/100</small>";
-  $("pin").style.left = r.score + "%";
-  const v = $("verdict");
-  if (r.score >= 60) { v.textContent = "Nhiều dấu hiệu AI"; v.className = "verdict v-ai"; }
-  else if (r.score >= 35) { v.textContent = "Lẫn lộn, khó nói"; v.className = "verdict v-mid"; }
-  else { v.textContent = "Nghiêng về người viết"; v.className = "verdict v-human"; }
-
-  const rows = [
-    ["Độ nhấp nhô câu", r.cv.toFixed(2), r.s.burst, `Câu dài trung bình ${r.mean.toFixed(1)} chữ. Hệ số biến thiên dưới 0,35 nghĩa là các câu dài gần bằng nhau, kiểu AI.`],
-    ["Cụm từ sáo rỗng", r.cl + " lần", r.s.clich, `${r.clRate.toFixed(1)} lần trên 100 chữ. Những cụm như "hành trình", "đóng vai trò quan trọng" AI dùng rất nhiều.`],
-    ["Từ nối đầu câu", r.kn + " câu", r.s.conn, `${Math.round(r.knRate*100)}% số câu mở bằng "Bên cạnh đó", "Hơn nữa", "Tóm lại"...`],
-    ["Giọng nói thật", r.hm + " dấu hiệu", r.s.human, `Tiểu từ (nhé, á, thôi), xưng hô thân mật, dấu ? ! ... Càng nhiều càng giống người.`],
-    ["Đa dạng từ vựng", r.mattr.toFixed(2), r.s.div, `Tỉ lệ chữ khác nhau trên mỗi 50 chữ. Thấp nghĩa là lặp từ nhiều.`],
-    ["Cụm 3 chữ lặp lại", Math.round(r.triRep*100) + "%", r.s.rep, `Tỉ lệ cụm ba chữ xuất hiện từ hai lần trở lên.`],
-  ];
-  $("signals").innerHTML = rows.map(([name,val,s,note]) =>
-    `<li class="sig"><b>${name}</b><span class="val">${val}</span><div class="meter"><span style="width:${Math.round(s*100)}%;background:${color(s)}"></span></div><span class="note">${note}</span></li>`).join("");
-  const mx = Math.max(...r.lens, 1);
-  $("chart").innerHTML = r.lens.map((l,i) => `<span title="Câu ${i+1}: ${l} chữ" style="height:${Math.round(l/mx*100)}%"></span>`).join("");
+async function run() {
+  const text = normalize($("txt").value);
+  $("err").hidden = true;
+  if (!text.trim()) { $("err").textContent = "Paste some text first."; $("err").hidden = false; return; }
+  if (!server) return show(text, localCheck(text));
+  $("run").disabled = true; $("run").textContent = "Checking…";
+  try {
+    const res = await fetch("/api/check", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text})});
+    const r = await res.json();
+    if (!res.ok) throw new Error(r.error || res.statusText);
+    show(text, r);
+  } catch (e) {
+    $("err").textContent = "The model could not score this text (" + e.message + "). Showing writing-style signals instead.";
+    $("err").hidden = false; show(text, localCheck(text));
+  } finally { $("run").disabled = false; $("run").textContent = "Check text"; }
 }
 
-$("run").onclick = render;
-$("sampleAi").onclick = () => { $("txt").value = SAMPLE_AI; render(); };
-$("sampleHuman").onclick = () => { $("txt").value = SAMPLE_HUMAN; render(); };
-$("clear").onclick = () => { $("txt").value = ""; render(); $("txt").focus(); };
-let tm; $("txt").addEventListener("input", () => { clearTimeout(tm); tm = setTimeout(render, 300); });
+function updateCount() { $("count").textContent = words($("txt").value).length + " words"; }
+$("run").onclick = run;
+$("sAi").onclick = () => { $("txt").value = SAMPLE_AI; updateCount(); run(); };
+$("sHu").onclick = () => { $("txt").value = SAMPLE_HUMAN; updateCount(); run(); };
+$("clear").onclick = () => { $("txt").value = ""; updateCount(); $("result").hidden = true; $("txt").focus(); };
+$("txt").addEventListener("input", updateCount);
+$("txt").addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") run(); });
 
-let saved = null; try { saved = localStorage.getItem("aicheck-draft"); } catch (e) {}
-$("txt").value = saved && saved.trim() ? saved : SAMPLE_AI;
-render();
+(async () => {
+  $("txt").value = SAMPLE_AI; updateCount(); run();
+  if (!/^https?:$/.test(location.protocol)) return;
+  try {
+    const ctl = new AbortController(); setTimeout(() => ctl.abort(), 1500);
+    const info = await (await fetch("/api/info", {signal: ctl.signal})).json();
+    if (info.model) {
+      server = true;
+      $("mode").classList.add("on");
+      $("modeText").textContent = "Language model on" + (info.calibrated ? " · calibrated" : "");
+      run();
+    } else if ("model" in info) {
+      $("modeText").textContent = "Writing-style check · local app";
+    }
+  } catch (e) { /* no local server: browser-only mode */ }
+})();
 </script>
 </body>
 </html>

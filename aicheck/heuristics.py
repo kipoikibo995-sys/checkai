@@ -1,6 +1,8 @@
-"""Dấu hiệu văn phong, không cần mô hình: chạy được ở mọi máy, kể cả không có GPU.
+"""Writing-style signals that need no model, so they run anywhere.
 
-Mỗi dấu hiệu trả về một giá trị 0..1, trong đó 1 nghĩa là "giống văn AI".
+Each signal is a value from 0 to 1, where 1 means "reads like AI".
+The phrase lists are tuned for English, with a smaller Vietnamese set.
+Keep them in sync with the copy in aicheck/web.html.
 """
 
 from __future__ import annotations
@@ -9,38 +11,50 @@ import math
 import re
 from dataclasses import dataclass, field
 
+# Words and phrases that AI assistants overuse.
 CLICHES = [
-    "trong thế giới", "ngày nay", "đóng vai trò quan trọng", "vai trò quan trọng",
-    "không chỉ", "mà còn", "hành trình", "khám phá", "trải nghiệm", "đầy ý nghĩa",
-    "sâu sắc", "tỉ mỉ", "chìa khóa", "chìa khoá", "nâng tầm", "lan tỏa", "lan toả",
-    "giá trị tích cực", "đa dạng", "tối ưu", "hiệu quả", "một cách",
-    "không thể phủ nhận", "điều quan trọng là", "đáp ứng nhu cầu", "ngày càng",
-    "tuyệt vời", "tuyệt đẹp", "hấp dẫn", "đồng hành", "nguồn cảm hứng",
-    "truyền cảm hứng", "động lực", "hãy cùng", "đừng quên", "bất kỳ", "góp phần",
-    "mang đến", "mang lại", "nhằm", "giúp bạn", "tìm thấy", "kết nối", "thông điệp",
-    "bí quyết", "toàn diện", "vượt trội", "đột phá",
-    "in today's world", "delve", "tapestry", "it's important to note",
-    "it is important to note", "in conclusion", "navigate", "landscape", "embark",
-    "journey", "unlock", "elevate", "seamless", "vibrant", "testament",
-    "plays a crucial role", "crucial", "pivotal", "foster", "realm",
+    # English
+    "delve", "delves", "delving", "tapestry", "testament to", "it's important to note",
+    "it is important to note", "it's worth noting", "it is worth noting",
+    "in today's fast-paced world", "in today's digital age", "in today's world",
+    "ever-evolving", "ever-changing", "fast-paced", "navigate the complexities", "navigating",
+    "landscape", "embark", "journey", "unlock", "unleash", "elevate", "seamless", "seamlessly",
+    "vibrant", "plays a crucial role", "plays a vital role", "crucial", "pivotal", "foster",
+    "fostering", "realm", "robust", "leverage", "harness", "empower", "empowering",
+    "transformative", "game-changer", "game changer", "cutting-edge", "dive into", "let's dive",
+    "a myriad of", "myriad", "plethora", "showcase", "showcasing", "underscore", "underscores",
+    "intricate", "meticulous", "meticulously", "comprehensive", "holistic", "paramount",
+    "resonate", "resonates", "bustling", "beacon", "symphony", "nestled", "look no further",
+    "rest assured", "not only", "but also", "stands as", "serves as", "boasts", "captivating",
+    "invaluable", "valuable insights", "to the next level", "embrace", "thrive", "endeavor",
+    "unwavering", "profound", "enhance", "streamline", "optimize", "innovative", "dynamic",
+    "whether you're", "in the world of", "when it comes to", "a wide range of",
+    # Vietnamese
+    "trong thế giới", "đóng vai trò quan trọng", "không chỉ", "mà còn", "hành trình",
+    "khám phá", "trải nghiệm", "đầy ý nghĩa", "chìa khóa", "nâng tầm", "lan tỏa",
+    "đa dạng", "tối ưu", "không thể phủ nhận", "đáp ứng nhu cầu", "hãy cùng", "đồng hành",
 ]
 
+# Transition words that AI likes to open sentences with.
 CONNECTORS = [
-    "bên cạnh đó", "hơn nữa", "ngoài ra", "tóm lại", "nhìn chung", "cuối cùng",
-    "thêm vào đó", "đặc biệt", "không những thế", "vì vậy", "do đó", "tuy nhiên",
-    "nói tóm lại", "trước hết", "đầu tiên", "thứ hai",
     "moreover", "furthermore", "additionally", "however", "overall", "in addition",
-    "firstly", "finally", "ultimately",
+    "firstly", "secondly", "lastly", "finally", "ultimately", "in conclusion", "in summary",
+    "to summarize", "consequently", "therefore", "thus", "notably", "importantly",
+    "as a result", "on the other hand", "that said", "by contrast", "in essence",
+    "bên cạnh đó", "hơn nữa", "ngoài ra", "tóm lại", "nhìn chung", "cuối cùng", "tuy nhiên",
 ]
 
+# Signs of a real person talking: contractions, slang, first person, filler.
 HUMAN_MARKERS = [
-    "mình", "tui", "tớ", "bọn mình", "tụi mình", "nhé", "nha", "nhỉ", "ạ", "á",
-    "hả", "hở", "đấy", "đó", "thôi", "luôn", "chả", "chẳng", "kiểu", "ủa", "ơi",
-    "trời", "haha", "hihi", "kkk", "lol", "chứ", "mà", "vậy", "chắc", "hồi", "đứa",
-    "tao", "mày",
+    "i'm", "i've", "i'd", "i'll", "don't", "can't", "won't", "didn't", "isn't", "wasn't",
+    "couldn't", "wouldn't", "shouldn't", "gonna", "wanna", "gotta", "kinda", "sorta",
+    "yeah", "yep", "nope", "lol", "lmao", "haha", "honestly", "tbh", "idk", "btw", "ok",
+    "okay", "stuff", "anyway", "anyways", "dunno", "ugh", "wow", "damn", "pretty much",
+    "i guess", "i mean", "you know", "i", "my", "me",
+    "mình", "tui", "nhé", "nha", "nhỉ", "á", "thôi", "chả", "kiểu", "ủa",
 ]
 
-# Trọng số khi gộp các dấu hiệu thành một điểm (tổng = 1).
+# Weights used to combine the signals into one score (sum = 1).
 WEIGHTS = {
     "burstiness": 0.22,
     "cliches": 0.28,
@@ -50,17 +64,31 @@ WEIGHTS = {
     "repetition": 0.09,
 }
 
+SIGNAL_LABELS = {
+    "burstiness": "Even sentence lengths",
+    "cliches": "AI buzzwords",
+    "connectors": "Stock transitions",
+    "human_voice": "No personal voice",
+    "diversity": "Repeated vocabulary",
+    "repetition": "Repeated phrases",
+}
+
 
 def _alt(phrases: list[str]) -> str:
-    return "|".join(re.escape(p) for p in sorted(phrases, key=len, reverse=True))
+    return "|".join(re.escape(p) for p in sorted(set(phrases), key=len, reverse=True))
 
 
 RE_CLICHE = re.compile(rf"(?<!\w)({_alt(CLICHES)})(?!\w)", re.IGNORECASE)
-RE_HUMAN = re.compile(rf"(?<!\w)({_alt(HUMAN_MARKERS)})(?!\w)", re.IGNORECASE)
+RE_HUMAN = re.compile(rf"(?<![\w'])({_alt(HUMAN_MARKERS)})(?![\w'])", re.IGNORECASE)
 RE_CONNECTOR = re.compile(rf"(^|[.!?…\n]\s*)({_alt(CONNECTORS)})(?!\w)", re.IGNORECASE)
 RE_WORD = re.compile(r"[\w']+")
 RE_SENT_SPLIT = re.compile(r"(?<=[.!?…])\s+|\n+")
 RE_PUNCT = re.compile(r"[?!]|\.\.\.|…")
+
+
+def normalize(text: str) -> str:
+    """Straighten curly apostrophes. Same length, so character offsets stay valid."""
+    return text.replace("’", "'").replace("‘", "'")
 
 
 def words(text: str) -> list[str]:
@@ -91,7 +119,7 @@ def split_sentences(text: str) -> list[Sentence]:
 
 
 def _lin(x: float, lo: float, hi: float) -> float:
-    """0 khi x <= lo, 1 khi x >= hi, tuyến tính ở giữa."""
+    """0 when x <= lo, 1 when x >= hi, linear in between."""
     return max(0.0, min(1.0, (x - lo) / (hi - lo)))
 
 
@@ -109,11 +137,12 @@ class HeuristicResult:
     sentence_lengths: list[int]
     stats: dict[str, float]
     signals: dict[str, float]
-    score: float  # 0..1, 1 = giống AI
+    score: float  # 0..1, 1 = reads like AI
     highlights: list[Highlight] = field(default_factory=list)
 
 
 def find_highlights(text: str) -> list[Highlight]:
+    text = normalize(text)
     found: list[Highlight] = []
     for m in RE_CONNECTOR.finditer(text):
         found.append(Highlight(m.start(2), m.end(2), "connector"))
@@ -131,6 +160,7 @@ def find_highlights(text: str) -> list[Highlight]:
 
 
 def analyze(text: str) -> HeuristicResult:
+    text = normalize(text)
     w = words(text)
     n = len(w)
     sents = split_sentences(text)
@@ -139,7 +169,7 @@ def analyze(text: str) -> HeuristicResult:
     sd = math.sqrt(sum((x - mean) ** 2 for x in lens) / len(lens)) if lens else 0.0
     cv = sd / mean if mean else 0.0
 
-    # MATTR: tỉ lệ chữ khác nhau, trung bình trên cửa sổ trượt 50 chữ
+    # MATTR: share of distinct words, averaged over a sliding 50-word window
     win = min(50, n)
     mattr = 0.0
     if n >= 10:

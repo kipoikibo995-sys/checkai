@@ -1,26 +1,26 @@
-"""Đo văn bản bằng mô hình ngôn ngữ thật, theo phương pháp Binoculars.
+"""Score text with a real language model, using the Binoculars method.
 
-Ý tưởng (Hans và cộng sự, 2024, "Spotting LLMs With Binoculars"):
-  - log-perplexity: văn bản có "dễ đoán" với mô hình không. Văn AI thường dễ đoán.
-  - cross-perplexity: mức "dễ đoán" trung bình mà mô hình kỳ vọng ở vị trí đó.
-  - Điểm Binoculars = log-perplexity / cross-perplexity. Điểm càng thấp càng giống AI.
+Idea (Hans et al., 2024, "Spotting LLMs With Binoculars"):
+  - log-perplexity: how predictable the text is to the model. AI text is usually very predictable.
+  - cross-perplexity: how predictable the model expects text to be at each position.
+  - Binoculars score = log-perplexity / cross-perplexity. Lower means more AI-like.
 
-Chia cho cross-perplexity giúp tránh nhầm khi đề tài vốn dễ đoán (ví dụ văn mẫu),
-vì khi đó cả tử và mẫu đều thấp. Dùng một cặp mô hình base/instruct cùng bộ từ vựng
-cho kết quả tốt nhất; chỉ một mô hình vẫn chạy được nhưng kém chính xác hơn.
+Dividing by cross-perplexity avoids false alarms on topics that are naturally predictable
+(boilerplate, formal writing), because both numbers drop together. A base/instruct pair that
+shares one vocabulary works best; a single model also works but is less accurate.
 
-Cần cài: pip install torch transformers
+Requires: pip install torch transformers
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-# Các cặp mô hình gợi ý. Qwen2.5 hỗ trợ tiếng Việt và có bản base lẫn instruct.
+# Suggested model pairs. Qwen2.5 handles English well and ships base and instruct versions.
 PRESETS = {
-    "nhe": ("Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-0.5B-Instruct"),   # ~4 GB RAM, chạy được trên CPU
-    "chuan": ("Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-1.5B-Instruct"), # ~12 GB RAM hoặc GPU 8 GB
-    "manh": ("Qwen/Qwen2.5-7B", "Qwen/Qwen2.5-7B-Instruct"),      # cần GPU từ 24 GB
+    "light": ("Qwen/Qwen2.5-0.5B", "Qwen/Qwen2.5-0.5B-Instruct"),     # ~4 GB RAM, runs on CPU
+    "standard": ("Qwen/Qwen2.5-1.5B", "Qwen/Qwen2.5-1.5B-Instruct"),  # ~12 GB RAM or an 8 GB GPU
+    "strong": ("Qwen/Qwen2.5-7B", "Qwen/Qwen2.5-7B-Instruct"),        # needs a 24 GB+ GPU
 }
 
 
@@ -62,7 +62,7 @@ class BinocularsScorer:
             import torch
             from transformers import AutoModelForCausalLM, AutoTokenizer
         except ImportError as e:  # pragma: no cover
-            raise RuntimeError("Chưa cài thư viện mô hình. Chạy: pip install torch transformers") from e
+            raise RuntimeError("Model libraries are not installed. Run: pip install torch transformers") from e
 
         self.torch = torch
         if device is None:
@@ -79,19 +79,19 @@ class BinocularsScorer:
         self.performer_name = performer or observer
         self.tokenizer = AutoTokenizer.from_pretrained(observer)
         if not self.tokenizer.is_fast:
-            raise RuntimeError("Cần tokenizer loại 'fast' để gắn điểm vào từng câu.")
+            raise RuntimeError("A 'fast' tokenizer is required to score individual sentences.")
 
         def load(name):
             try:
                 m = AutoModelForCausalLM.from_pretrained(name, dtype=dtype)
-            except TypeError:  # transformers cũ hơn 4.56
+            except TypeError:  # transformers older than 4.56
                 m = AutoModelForCausalLM.from_pretrained(name, torch_dtype=dtype)
             return m.to(device).eval()
 
         self.observer = load(observer)
         self.performer = load(performer) if performer and performer != observer else self.observer
         if self.observer.config.vocab_size != self.performer.config.vocab_size:
-            raise RuntimeError("Hai mô hình phải dùng chung bộ từ vựng (cùng họ mô hình).")
+            raise RuntimeError("Both models must share a vocabulary (use the same model family).")
         self.max_tokens = max_tokens
         self.window = window
 
@@ -100,11 +100,11 @@ class BinocularsScorer:
         return f"{self.observer_name}|{self.performer_name}"
 
     def _token_scores(self, ids):
-        """Trả về (loss, xent) cho từng token, tính theo cửa sổ để văn dài không tràn bộ nhớ."""
+        """Per-token (loss, cross-entropy), computed in windows so long texts fit in memory."""
         torch = self.torch
         F = torch.nn.functional
         losses, xents = [], []
-        # Các cửa sổ chồng nhau 1 token để mọi token (trừ token đầu) đều có ngữ cảnh.
+        # Windows overlap by one token so every token except the first has context.
         for s in range(0, len(ids) - 1, self.window):
             chunk = ids[s:s + self.window + 1].unsqueeze(0).to(self.device)
             if chunk.shape[1] < 2:
@@ -127,12 +127,12 @@ class BinocularsScorer:
         bos = self.tokenizer.bos_token_id
         if bos is None:
             bos = self.tokenizer.eos_token_id
-        # Thêm token mở đầu để token đầu tiên của văn bản cũng được chấm.
+        # Prepend a start token so the first real token is scored too.
         ids_t = torch.tensor([bos] + ids, dtype=torch.long)
-        loss, xent = self._token_scores(ids_t)  # loss[i] ứng với ids[i]
+        loss, xent = self._token_scores(ids_t)  # loss[i] belongs to ids[i]
         n = min(len(ids), len(loss))
         if n == 0:
-            raise ValueError("Văn bản quá ngắn để chấm bằng mô hình.")
+            raise ValueError("Text is too short to score with the model.")
         loss, xent = loss[:n], xent[:n]
         result = LMResult(n, float(loss.mean()), float(xent.mean()), truncated)
 
