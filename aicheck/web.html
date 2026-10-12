@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CheckAI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23f05216'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&display=swap">
 <style>
 /* Layout: one calm centered column (input card, result card, explainer), KoJi Launch palette */
@@ -35,6 +36,7 @@
   --ai: #ff7a3d; --ai-soft: #3d1a0c; --mid: #f1b449; --mid-soft: #3a2b0e;
   --human: #4cc98b; --human-soft: #0f3324; --conn-soft: #12324a; color-scheme: dark; }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
 .page { max-width: 780px; margin: 0 auto; padding-inline: 18px; padding-block: 20px 56px; display: grid; gap: 20px; }
 
@@ -133,10 +135,10 @@ details a { color: var(--accent); font-weight: 700; }
       <button class="link" id="clear" type="button">Clear</button>
       <button class="go" id="run" type="button">Check text</button>
     </div>
-    <p class="err" id="err" hidden></p>
+    <p class="err" id="err" role="alert" hidden></p>
   </div>
 
-  <div class="card result" id="result" hidden>
+  <div class="card result" id="result" aria-live="polite" hidden>
     <div class="headline">
       <div class="pct" id="pct">0<small>%</small></div>
       <div>
@@ -159,7 +161,8 @@ details a { color: var(--accent); font-weight: 700; }
       <span><mark class="c">buzzword</mark></span>
       <span><mark class="k">stock transition</mark></span>
       <span><mark class="h">personal voice</mark></span>
-      <span id="lgModel" hidden><mark class="s2">flagged by model</mark></span>
+      <span id="lgModel" hidden><mark class="s1">leans AI (model)</mark></span>
+      <span id="lgModel2" hidden><mark class="s2">flagged by model</mark></span>
     </div>
     <div class="text" id="out"></div>
   </div>
@@ -284,7 +287,7 @@ function show(text, r) {
   $("signals").innerHTML = Object.entries(r.signals).map(([k, v]) =>
     `<li class="sig"><div class="row"><span>${LABELS[k]}</span><span>${Math.round(v * 100)}</span></div><div class="meter"><i style="width:${Math.round(v * 100)}%;background:${tone(v)}"></i></div></li>`).join("");
   const top = r.sentences.filter(s => s.ai_probability != null).sort((a, b) => b.ai_probability - a.ai_probability).slice(0, 3);
-  $("topLabel").hidden = !top.length; $("lgModel").hidden = !top.length;
+  $("topLabel").hidden = !top.length; $("lgModel").hidden = $("lgModel2").hidden = !top.length;
   $("top3").innerHTML = top.map(s => `<li><b>${Math.round(s.ai_probability * 100)}%</b><span>${html(s.text)}</span></li>`).join("");
   $("out").innerHTML = annotate(text, r);
 }
