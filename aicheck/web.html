@@ -300,7 +300,7 @@ details a { color: var(--accent); font-weight: 700; }
       <ul>
         <li><b>Writing-style signals.</b> AI tends to write sentences of similar length, lean on buzzwords like "delve" or "seamless", open sentences with "Moreover" or "Furthermore", and avoid contractions and personal voice. These six signals run right in your browser.</li>
         <li><b>AI model.</b> Press <b>Turn on AI model</b> and two small language models (SmolLM2-135M, base and instruct) are downloaded once and run inside your browser. They score how predictable each word is using the Binoculars method: AI text is unusually predictable. The model counts for 70% of the score and also flags individual sentences. The full app (<code>python -m aicheck serve</code>) can use larger Qwen2.5 models instead.</li>
-        <li><b>How accurate?</b> On a held-out test of 114 answers from the HC3 dataset (people vs. ChatGPT, 2022), the browser model was right 96% of the time and never flagged a human answer. Newer AI models write less predictably: on a small set of texts from a 2026 model it caught only 4 out of 10. Treat a "human" verdict as "not obviously AI".</li>
+        <li><b>How accurate?</b> On a held-out test of 114 answers from the HC3 dataset (people vs. ChatGPT, 2022), the browser model was right 93% of the time (it caught 86% of the AI answers) and never flagged a human answer. Newer AI models write less predictably: on a small set of texts from a 2026 model it caught only 4 out of 10. Treat a "human" verdict as "not obviously AI".</li>
         <li><b>It is an estimate.</b> Formulaic human writing can look like AI, and AI text edited by hand can pass as human. Short texts under 120 words are unreliable. Never use a single score as proof.</li>
         <li><b>Second opinion.</b> Compare with <a href="https://gptzero.me" target="_blank" rel="noopener">GPTZero</a> or <a href="https://copyleaks.com/ai-content-detector" target="_blank" rel="noopener">Copyleaks</a>. If tools disagree, nobody knows for sure.</li>
       </ul>
@@ -488,11 +488,11 @@ $("hist").onclick = e => {
 $("histClear").onclick = () => { recent = []; saveHistory(); renderHistory(); };
 
 // In-browser language model (Binoculars), mirroring aicheck/model.py and aicheck/detector.py.
-// Threshold and scale were calibrated on 116 HC3 answers (people vs. ChatGPT), separate from the test set.
+// Threshold and scale were calibrated inside Chromium on 116 HC3 answers (people vs. ChatGPT), separate from the test set.
 const LMCFG = {
   lib: "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/dist/transformers.min.js",
   observer: "onnx-community/SmolLM2-135M-ONNX", performer: "HuggingFaceTB/SmolLM2-135M-Instruct", dtype: "int8",
-  maxTokens: 512, window: 256, threshold: 0.759, scale: 0.039, weight: 0.7, size: 275e6,
+  maxTokens: 512, window: 256, threshold: 0.753, scale: 0.038, weight: 0.7, size: 275e6,
 };
 const LMKEY = "checkai.lm";
 let lm = null;
