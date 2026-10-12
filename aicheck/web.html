@@ -495,41 +495,18 @@ const LMCFG = {
   maxTokens: 512, window: 256, threshold: 0.753, scale: 0.038, weight: 0.7, size: 275e6,
 };
 const LMKEY = "checkai.lm";
-let lm = null;
+let lm = null;  // set to the worker once the model is ready
 const sigmoid = x => 1 / (1 + Math.exp(-Math.max(-60, Math.min(60, x))));
 const lmProb = b => sigmoid((LMCFG.threshold - b) / LMCFG.scale);
 
-async function loadLM() {
-  $("lmBtn").disabled = true; $("lmBtn").textContent = "Loading…"; $("lmProg").hidden = false;
-  const files = {};
-  const progress_callback = e => {
-    if (e.status !== "progress" || !e.total) return;
-    files[e.name + "/" + e.file] = [e.loaded, e.total];
-    const v = Object.values(files), got = v.reduce((a, x) => a + x[0], 0), all = Math.max(LMCFG.size, v.reduce((a, x) => a + x[1], 0));
-    $("lmBar").style.width = Math.round(got / all * 100) + "%";
-    $("lmMsg").innerHTML = `<b>Downloading the AI model…</b> ${Math.round(got / 1e6)} of ~${Math.round(all / 1e6)} MB. This only happens once.`;
-  };
-  try {
-    const T = await import(LMCFG.lib);
-    const tok = await T.AutoTokenizer.from_pretrained(LMCFG.observer, {progress_callback});
-    const obs = await T.AutoModelForCausalLM.from_pretrained(LMCFG.observer, {dtype: LMCFG.dtype, progress_callback});
-    const perf = await T.AutoModelForCausalLM.from_pretrained(LMCFG.performer, {dtype: LMCFG.dtype, progress_callback});
-    lm = {T, tok, obs, perf};
-    try { localStorage.setItem(LMKEY, "on"); } catch (e) { /* storage blocked */ }
-    $("lmBox").hidden = true;
-    $("mode").classList.add("on"); $("modeText").textContent = "AI model on · runs in your browser";
-    if ($("txt").value.trim()) run();
-  } catch (e) {
-    $("lmProg").hidden = true; $("lmBtn").disabled = false; $("lmBtn").textContent = "Try again";
-    $("lmMsg").innerHTML = `<b>The AI model could not load</b> (${html(String(e.message || e))}). Writing-style signals still work.`;
-  }
-}
-
-// Per-token loss (performer on the real next token) and cross-entropy (observer vs performer).
-async function lmTokenScores(ids) {
-  const {T, obs, perf} = lm, loss = [], xent = [];
-  for (let s = 0; s < ids.length - 1; s += LMCFG.window) {
-    const chunk = ids.slice(s, s + LMCFG.window + 1), n = chunk.length;
+// The model runs in a Web Worker so downloading, starting and scoring never freeze the page.
+// Per token: loss = performer cross-entropy on the real next token, xent = observer vs performer cross-entropy.
+const LM_WORKER = `
+let T, tok, obs, perf, C;
+async function tokenScores(ids) {
+  const loss = [], xent = [];
+  for (let s = 0; s < ids.length - 1; s += C.window) {
+    const chunk = ids.slice(s, s + C.window + 1), n = chunk.length;
     if (n < 2) break;
     const input_ids = new T.Tensor("int64", BigInt64Array.from(chunk.map(BigInt)), [1, n]);
     const attention_mask = new T.Tensor("int64", new BigInt64Array(n).fill(1n), [1, n]);
@@ -547,29 +524,88 @@ async function lmTokenScores(ids) {
   }
   return {loss, xent};
 }
+self.onmessage = async ({data: m}) => {
+  try {
+    if (m.type === "load") {
+      C = m.cfg;
+      T = await import(C.lib);
+      const progress_callback = e => { if (e.status === "progress" && e.total) postMessage({type: "progress", key: e.name + "/" + e.file, loaded: e.loaded, total: e.total}); };
+      [tok, obs, perf] = await Promise.all([
+        T.AutoTokenizer.from_pretrained(C.observer, {progress_callback}),
+        T.AutoModelForCausalLM.from_pretrained(C.observer, {dtype: C.dtype, progress_callback}),
+        T.AutoModelForCausalLM.from_pretrained(C.performer, {dtype: C.dtype, progress_callback}),
+      ]);
+      postMessage({type: "ready"});
+    } else if (m.type === "score") {
+      // Tokenize sentence by sentence (cuts fall on pre-token boundaries) so each token knows its sentence.
+      const ids = [], owner = [];
+      for (const [a, b, si] of m.segs) tok.encode(m.text.slice(a, b), {add_special_tokens: false}).forEach(id => { ids.push(id); owner.push(si); });
+      const {loss, xent} = await tokenScores([tok.bos_token_id ?? 0, ...ids.slice(0, C.maxTokens)]);
+      const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+      const sent = m.segs.map(([, , si]) => {
+        const idx = owner.map((o, i) => o === si && i < loss.length ? i : -1).filter(i => i >= 0);
+        return idx.length >= 3 ? mean(idx.map(i => loss[i])) / mean(idx.map(i => xent[i])) : null;
+      });
+      postMessage({type: "result", id: m.id, b: mean(loss) / mean(xent), sent, tokens: loss.length, truncated: ids.length > C.maxTokens});
+    }
+  } catch (e) { postMessage({type: "error", id: m.id, message: String(e && e.message || e)}); }
+};`;
+const lmJobs = new Map(); let lmSeq = 0;
+function lmCall(msg) { return new Promise((resolve, reject) => { const id = ++lmSeq; lmJobs.set(id, {resolve, reject}); lm.postMessage({...msg, id}); }); }
+
+function loadLM() {
+  $("lmBtn").disabled = true; $("lmBtn").textContent = "Loading…"; $("lmProg").hidden = false; $("lmBar").style.width = "0%";
+  $("lmMsg").innerHTML = "<b>Starting the download…</b>";
+  const files = {};
+  let w;
+  const fail = msg => {
+    if (w) w.terminate();
+    $("lmProg").hidden = true; $("lmBtn").disabled = false; $("lmBtn").textContent = "Try again";
+    $("lmMsg").innerHTML = `<b>The AI model could not load</b> (${html(msg)}). Writing-style signals still work.`;
+  };
+  try { w = new Worker(URL.createObjectURL(new Blob([LM_WORKER], {type: "text/javascript"})), {type: "module"}); }
+  catch (e) { return fail("this browser cannot run it in the background"); }
+  w.onerror = e => { e.preventDefault(); fail(e.message || "background worker failed"); };
+  w.onmessage = ({data: m}) => {
+    if (m.type === "progress") {
+      files[m.key] = [m.loaded, m.total];
+      const v = Object.values(files), got = v.reduce((a, x) => a + x[0], 0), all = Math.max(LMCFG.size, v.reduce((a, x) => a + x[1], 0));
+      $("lmBar").style.width = Math.round(got / all * 100) + "%";
+      $("lmMsg").innerHTML = got >= all * .995
+        ? "<b>Almost ready:</b> starting the AI model. This can take up to a minute on slower computers."
+        : `<b>Downloading the AI model…</b> ${Math.round(got / 1e6)} of ~${Math.round(all / 1e6)} MB. This only happens once.`;
+    } else if (m.type === "ready") {
+      lm = w;
+      try { localStorage.setItem(LMKEY, "on"); } catch (e) { /* storage blocked */ }
+      $("lmBox").hidden = true;
+      $("mode").classList.add("on"); $("modeText").textContent = "AI model on · runs in your browser";
+      if ($("txt").value.trim()) run();
+    } else if (m.type === "result" || m.type === "error") {
+      const job = lmJobs.get(m.id);
+      if (job) { lmJobs.delete(m.id); m.type === "result" ? job.resolve(m) : job.reject(new Error(m.message)); }
+      else if (m.type === "error") fail(m.message);
+    }
+  };
+  w.postMessage({type: "load", cfg: LMCFG});
+}
 
 async function lmCheck(text) {
   const r = localCheck(text);
   if (r.words < 5) return r;
-  // Tokenize sentence by sentence (cuts fall on pre-token boundaries) so each token knows its sentence.
-  const ids = [], owner = []; let pos = 0;
+  const segs = []; let pos = 0;
   r.sentences.forEach((s, si) => {
     const end = si === r.sentences.length - 1 ? text.length : s.end;
-    if (end > pos) lm.tok.encode(text.slice(pos, end), {add_special_tokens: false}).forEach(id => { ids.push(id); owner.push(si); });
+    if (end > pos) segs.push([pos, end, si]);
     pos = Math.max(pos, end);
   });
-  const truncated = ids.length > LMCFG.maxTokens;
-  const {loss, xent} = await lmTokenScores([lm.tok.bos_token_id ?? 0, ...ids.slice(0, LMCFG.maxTokens)]);
-  const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
-  const b = mean(loss) / mean(xent), h = r.ai_probability;
-  r.ai_probability = LMCFG.weight * lmProb(b) + (1 - LMCFG.weight) * h;
+  const m = await lmCall({type: "score", text, segs});
+  const h = r.ai_probability;
+  r.ai_probability = LMCFG.weight * lmProb(m.b) + (1 - LMCFG.weight) * h;
   r.verdict = verdictFor(r.ai_probability);
-  r.sentences = r.sentences.map((s, si) => {
-    const idx = owner.map((o, i) => o === si && i < loss.length ? i : -1).filter(i => i >= 0);
-    return {...s, ai_probability: idx.length >= 3 ? lmProb(mean(idx.map(i => loss[i])) / mean(idx.map(i => xent[i]))) : null};
-  });
-  r.model = {binoculars: b, threshold: LMCFG.threshold, calibrated: true, model_probability: lmProb(b)};
-  if (truncated) r.warnings.push(`Long text: the AI model only read the first ${loss.length} tokens. The writing-style signals cover all of it.`);
+  const bySent = {}; segs.forEach(([, , si], i) => { bySent[si] = m.sent[i]; });
+  r.sentences = r.sentences.map((s, si) => ({...s, ai_probability: bySent[si] != null ? lmProb(bySent[si]) : null}));
+  r.model = {binoculars: m.b, threshold: LMCFG.threshold, calibrated: true, model_probability: lmProb(m.b)};
+  if (m.truncated) r.warnings.push(`Long text: the AI model only read the first ${m.tokens} tokens. The writing-style signals cover all of it.`);
   return r;
 }
 
@@ -580,7 +616,7 @@ async function run() {
   if (!server && !lm) return show(text, localCheck(text));
   $("run").disabled = true; $("run").textContent = "Checking…";
   try {
-    if (!server) { await new Promise(r => setTimeout(r, 30)); return show(text, await lmCheck(text)); }
+    if (!server) return show(text, await lmCheck(text));
     const res = await fetch("/api/check", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text})});
     const r = await res.json();
     if (!res.ok) throw new Error(r.error || res.statusText);
