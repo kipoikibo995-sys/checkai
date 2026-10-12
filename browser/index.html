@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CheckAI</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23f05216'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&display=swap">
+<title>Koji AI Checker</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 37'%3E%3Cpath d='M10 0h12a17.5 17.5 0 0 1 0 35H10z' fill='%23f05216'/%3E%3Cpath d='M0 6h4a9 9 0 0 1 9 9v22H0z' fill='%23081c25'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800;9..40,900&display=swap">
 <style>
-/* Layout: app shell. Left sidebar (samples, recent checks, mode, help) + workspace with input and result side by side on wide screens, stacked below 1180px; sidebar becomes a drawer below 900px. KoJi Launch palette */
+/* Layout: KoJi site header on top, then the app shell. Left sidebar (samples, recent checks, mode, help) + workspace with input and result side by side on wide screens, stacked below 1180px; sidebar becomes a drawer below 900px. KoJi Launch palette */
 :root {
   --bg: #faf8f1;
   --surface: #ffffff;
@@ -47,8 +47,56 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px soli
 
 /* Sidebar */
 .side { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--line); padding: 20px 14px; display: flex; flex-direction: column; gap: 22px; }
-.brand { font-weight: 800; font-size: 18px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 9px; padding: 0 6px; }
-.brand .mark { width: 28px; height: 28px; border-radius: 9px; background: linear-gradient(135deg, var(--accent-2), var(--accent)); display: grid; place-items: center; color: #ffffff; font-size: 14px; flex: none; }
+.brand { font-weight: 800; font-size: 18px; letter-spacing: -0.04em; display: flex; align-items: center; gap: 10px; padding: 0 6px; line-height: 1.1; }
+.brand small { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0; color: var(--muted); }
+.brand-mark { position: relative; width: 30px; height: 29px; display: inline-block; flex: none; }
+.brand-mark::before { content: ""; position: absolute; left: 8px; top: 0; width: 22px; height: 27px; background: var(--accent); border-radius: 0 50% 50% 0; }
+.brand-mark::after { content: ""; position: absolute; width: 10px; height: 24px; bottom: 0; left: 0; background: var(--fg); border-radius: 0 7px 0 0; }
+
+/* KoJi site header and footer (mirrors kojilaunch.com) */
+.site-head { height: 66px; background: var(--bg); border-bottom: 1px solid var(--line); position: relative; z-index: 15; }
+.site-nav { height: 100%; width: min(1480px, 100%); margin-inline: auto; padding-inline: 24px; display: flex; align-items: center; gap: 28px; }
+.site-logo { display: inline-flex; align-items: center; gap: 12px; font-size: 25px; line-height: 1; letter-spacing: -0.055em; font-weight: 800; white-space: nowrap; color: var(--fg); text-decoration: none; }
+.site-logo .brand-mark { width: 34px; height: 32px; }
+.site-logo .brand-mark::before { left: 9px; width: 25px; height: 30px; }
+.site-logo .brand-mark::after { width: 11px; height: 27px; }
+.site-links { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
+.site-links a { color: var(--fg); text-decoration: none; padding: 10px 12px; border-radius: 99px; }
+.site-links a:hover { color: var(--accent); }
+.site-links a[aria-current] { color: var(--accent); font-weight: 700; }
+.member { display: inline-flex; align-items: center; border: 1px solid var(--accent-2); border-radius: 99px; padding: 10px 20px; background: linear-gradient(110deg, #fc601c, #e7450c); color: #ffffff; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; transition: transform .2s, box-shadow .2s; }
+.member:hover { transform: translateY(-2px); box-shadow: 0 5px 15px #d8551930; }
+.site-links .nav-member { display: none; }
+.site-toggle { display: none; width: 36px; height: 36px; padding: 0; border-radius: 50%; border: 1px solid var(--fg); background: none; color: var(--fg); font-size: 18px; }
+.site-foot { background: #081c25; color: #ffffff; padding: 32px 0 22px; position: relative; overflow: hidden; }
+.site-foot::before { content: ""; position: absolute; width: 210px; height: 210px; border-radius: 50%; background: linear-gradient(90deg, var(--accent) 50%, var(--gold) 50%); right: -10px; bottom: -120px; }
+.site-foot::after { content: ""; position: absolute; right: 90px; top: 0; height: 100%; width: 2px; background: var(--gold); }
+.foot-wrap { width: min(1180px, 90%); margin-inline: auto; position: relative; z-index: 1; }
+.foot-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 32px; padding-right: 80px; padding-bottom: 22px; flex-wrap: wrap; }
+.foot-top .site-logo { color: #ffffff; font-size: 24px; }
+.foot-top .site-logo .brand-mark::after { background: #ffffff; }
+.foot-top p { font-size: 12px; margin: 10px 0 0; color: #c6cdd0; max-width: 30ch; }
+.foot-cols { display: grid; grid-template-columns: repeat(4, auto); gap: 28px 56px; }
+.foot-col { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.foot-col b { font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+.foot-col a { font-size: 14px; line-height: 1.3; color: #c9d4d8; text-decoration: none; }
+.foot-col a:hover { color: #ffffff; }
+.foot-bottom { border-top: 1px solid #79878b60; padding-top: 15px; width: 88%; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: #d6dfe2; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
+@media (max-width: 1100px) { .site-links { gap: 0; } .site-links a { padding: 10px 8px; } }
+@media (max-width: 899px) {
+  .site-head { height: 58px; }
+  .site-nav { padding-inline: 16px; gap: 12px; }
+  .site-logo { font-size: 21px; }
+  .site-toggle { display: grid; place-items: center; margin-left: auto; }
+  .member { padding: 8px 14px; font-size: 12px; }
+  .site-links { display: none; position: absolute; top: 58px; left: 0; right: 0; flex-direction: column; align-items: stretch; gap: 0; background: var(--surface); border-bottom: 1px solid var(--line); padding: 8px 16px 14px; box-shadow: 0 20px 30px -20px var(--shade); }
+  .site-head.open .site-links { display: flex; }
+  .site-links a { padding: 12px 4px; border-radius: 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .foot-top { padding-right: 0; }
+  .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+}
+@media (max-width: 420px) { .member { display: none; } .site-links .nav-member { display: block; color: var(--accent); font-weight: 700; } }
 .new { width: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-color: transparent; color: #ffffff; box-shadow: 0 8px 20px -12px var(--accent); }
 .new:hover { border-color: transparent; filter: brightness(1.05); }
 .group { display: grid; gap: 2px; }
@@ -76,7 +124,7 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px soli
 /* Main */
 .main { min-width: 0; padding: 28px 32px 56px; display: grid; gap: 20px; align-content: start; max-width: 1480px; }
 .topbar { display: none; }
-.intro h1 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.1; margin: 0 0 6px; text-wrap: balance; }
+.intro h1 { font-size: clamp(28px, 3.6vw, 40px); font-weight: 900; letter-spacing: -0.055em; line-height: 1.1; margin: 0 0 6px; text-wrap: balance; }
 .intro h1 span { color: var(--accent); }
 .intro p { margin: 0; color: var(--muted); font-size: 15px; max-width: 64ch; }
 
@@ -176,8 +224,7 @@ details a { color: var(--accent); font-weight: 700; }
   .app.open .shade { display: block; position: fixed; inset: 0; z-index: 10; background: var(--shade); }
   .main { padding: 0 16px 48px; }
   .topbar { display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 12px 0; margin-bottom: -8px; }
-  .topbar .menu { width: 40px; height: 40px; padding: 0; border-radius: 12px; display: grid; place-items: center; font-size: 18px; }
-  .topbar .brand { padding: 0; }
+  .topbar .menu { font-size: 13px; padding: 8px 14px; }
   .kbd { display: none; }
 }
 @media (max-width: 560px) { .signals { grid-template-columns: minmax(0, 1fr); } .headline { grid-template-columns: minmax(0, 1fr); gap: 10px; } .count { flex: 1 0 100%; } .bar-row .go { flex: 1 0 100%; order: 9; } }
@@ -185,9 +232,25 @@ details a { color: var(--accent); font-weight: 700; }
 </style>
 </head>
 <body>
+<header class="site-head" id="siteHead">
+  <div class="site-nav">
+    <a class="site-logo" href="https://kojilaunch.com/"><span class="brand-mark" aria-hidden="true"></span>KoJi Academy</a>
+    <nav class="site-links" id="siteLinks" aria-label="Main navigation">
+      <a href="https://kojilaunch.com/about/">About</a>
+      <a href="https://kojilaunch.com/my-blog/">Journal</a>
+      <a href="https://kojilaunch.com/reviews/">Reviews</a>
+      <a href="https://kojilaunch.com/my-product/">Products</a>
+      <a href="https://kojilaunch.com/gifts/">Resources</a>
+      <a href="https://kojilaunch.com/stream-writer-jv/">Affiliate</a>
+      <a class="nav-member" href="https://kojilaunch.com/login/?redirect_to=https%3A%2F%2Fkojilaunch.com%2Fmember-dashboard%2F">Member Access</a>
+    </nav>
+    <button class="site-toggle" id="siteToggle" type="button" aria-expanded="false" aria-controls="siteLinks" aria-label="Open site menu">☰</button>
+    <a class="member" href="https://kojilaunch.com/login/?redirect_to=https%3A%2F%2Fkojilaunch.com%2Fmember-dashboard%2F">Member Access</a>
+  </div>
+</header>
 <div class="app" id="app">
   <aside class="side" id="side" aria-label="Sidebar">
-    <div class="brand"><span class="mark" aria-hidden="true">✓</span>CheckAI</div>
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>Koji AI Checker<small>by KoJi Academy</small></span></div>
     <button class="new" id="new" type="button">+ New check</button>
 
     <div class="group">
@@ -213,11 +276,11 @@ details a { color: var(--accent); font-weight: 700; }
 
   <main class="main">
     <div class="topbar">
-      <button class="menu" id="menu" type="button" aria-label="Open menu" aria-controls="side" aria-expanded="false">☰</button>
-      <div class="brand"><span class="mark" aria-hidden="true">✓</span>CheckAI</div>
+      <button class="menu" id="menu" type="button" aria-controls="side" aria-expanded="false">☰ Samples &amp; history</button>
     </div>
 
     <div class="intro">
+      <p class="eyebrow">Koji AI Checker</p>
       <h1>Was this written by AI<span>?</span></h1>
       <p>Paste any text and get a quick read on whether it sounds machine-made, plus the exact phrases that give it away.</p>
     </div>
@@ -307,6 +370,42 @@ details a { color: var(--accent); font-weight: 700; }
     </details>
   </main>
 </div>
+<footer class="site-foot">
+  <div class="foot-wrap">
+    <div class="foot-top">
+      <div>
+        <a class="site-logo" href="https://kojilaunch.com/"><span class="brand-mark" aria-hidden="true"></span>KoJi Academy</a>
+        <p>Documenting the blueprint for sovereignty in the digital age.</p>
+      </div>
+      <div class="foot-cols">
+        <nav class="foot-col" aria-label="Programs"><b>Programs</b>
+          <a href="https://kojilaunch.com/saas-vibe-coding/">SaaS &amp; Vibe Coding</a>
+          <a href="https://kojilaunch.com/lets-build-your-website/">Websites</a>
+          <a href="https://kojilaunch.com/stream-writer-jv/">Partner program</a>
+          <a href="https://kojilaunch.com/contactus/">1:1 Coaching</a>
+        </nav>
+        <nav class="foot-col" aria-label="Resources"><b>Resources</b>
+          <a href="https://kojilaunch.com/7-day-roadmap/">7-Day Roadmap</a>
+          <a href="https://kojilaunch.com/gifts/">Free Resources</a>
+          <a href="https://kojilaunch.com/my-product/">Products</a>
+          <a href="https://kojilaunch.com/my-blog/">Journal</a>
+        </nav>
+        <nav class="foot-col" aria-label="Members"><b>Members</b>
+          <a href="https://kojilaunch.com/login/">Member login</a>
+          <a href="https://kojilaunch.com/register-2/">Create free account</a>
+          <a href="https://kojilaunch.com/member-dashboard/">Member dashboard</a>
+        </nav>
+        <nav class="foot-col" aria-label="Company"><b>Company</b>
+          <a href="https://kojilaunch.com/about/">About</a>
+          <a href="https://kojilaunch.com/contactus/">Contact</a>
+          <a href="https://kojilaunch.com/privacy-policy/">Privacy Policy</a>
+          <a href="https://kojilaunch.com/terms-of-service/">Terms of Service</a>
+        </nav>
+      </div>
+    </div>
+    <div class="foot-bottom">© 2026 KoJi Academy. All rights reserved.</div>
+  </div>
+</footer>
 
 <script>
 const SAMPLE_AI = `In today's fast-paced world, finding moments of inspiration plays a crucial role in maintaining a healthy mindset. FantasyQuote is not only a YouTube channel but also a trusted companion on your journey of self-discovery. Each video is meticulously crafted to deliver a profound and meaningful experience for viewers.
@@ -631,8 +730,9 @@ async function run() {
 function openMenu() { $("app").classList.add("open"); $("menu").setAttribute("aria-expanded", "true"); $("new").focus(); }
 function closeMenu() { if (!$("app").classList.contains("open")) return; $("app").classList.remove("open"); $("menu").setAttribute("aria-expanded", "false"); }
 $("menu").onclick = openMenu;
+$("siteToggle").onclick = () => { const o = $("siteHead").classList.toggle("open"); $("siteToggle").setAttribute("aria-expanded", String(o)); };
 $("shade").onclick = closeMenu;
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeMenu(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeMenu(); $("siteHead").classList.remove("open"); $("siteToggle").setAttribute("aria-expanded", "false"); } });
 
 function updateCount() {
   const n = words($("txt").value).length;

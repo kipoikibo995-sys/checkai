@@ -1,6 +1,6 @@
-# CheckAI
+# Koji AI Checker
 
-Tell whether a piece of text was written by AI or by a person. CheckAI runs entirely on your own computer, never sends your text anywhere, and comes as a web app, a command-line tool, and a zero-install browser page.
+Koji AI Checker (by [KoJi Academy](https://kojilaunch.com/), code name CheckAI) tells whether a piece of text was written by AI or by a person. It runs entirely on your own computer, never sends your text anywhere, and comes as a web app, a command-line tool, and a zero-install browser page.
 
 The result is a **probability, not proof**. Use it to find the parts of a text that sound machine-made and rewrite them, not to accuse anyone.
 
