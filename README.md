@@ -80,6 +80,23 @@ A free Hugging Face Space (CPU Basic) has enough memory for the `light` model pa
 
 To pick up new code from GitHub later, open the Space **Settings** and click **Factory rebuild**. On CPU each check takes a few seconds, and a free Space sleeps after a period without visitors, so the first visit after that is slow.
 
+## Run it on a free Oracle Cloud server
+
+Oracle Cloud's Always Free tier includes an Arm server with enough memory for the full app.
+
+1. Sign up at https://www.oracle.com/cloud/free/ (a card is needed for verification).
+2. Go to **Compute → Instances → Create instance**.
+   - **Image:** Canonical Ubuntu 24.04 (or 22.04).
+   - **Shape:** Ampere `VM.Standard.A1.Flex` with 2 OCPUs and 12 GB memory.
+   - **Networking:** keep the new virtual cloud network and make sure a public IPv4 address is assigned.
+   - **SSH keys:** let Oracle generate a key pair and download it.
+   - **Advanced options → Management:** choose **Paste cloud-init script** and paste all of `deploy/oracle/cloud-init.sh`.
+3. Click **Create**.
+4. Open port 80: on the instance page click the **subnet**, then its **Default security list**, **Add ingress rules**, source CIDR `0.0.0.0/0`, IP protocol TCP, destination port `80`.
+5. Wait 15–25 minutes for the first build, then open `http://<public IP>` in a browser.
+
+To update to the latest code later, connect over SSH and run `sudo checkai-update`. The setup log is in `/var/log/checkai-setup.log`.
+
 ## Calibration (recommended)
 
 The default threshold of 0.90 comes from the original paper, which used different models, so it may be off for Qwen. To make CheckAI accurate for the kind of writing you check, calibrate it with your own samples:
@@ -110,7 +127,8 @@ aicheck/detector.py     combines scores, gives the verdict, handles calibration
 aicheck/server.py       local web server (standard library only)
 aicheck/web.html        web app UI; also works without the server
 aicheck/__main__.py     command line
-deploy/huggingface/     Dockerfile and Space settings for Hugging Face Spaces
+deploy/huggingface/     Dockerfile (also used by the Oracle setup) and Space settings
+deploy/oracle/          one-paste setup script for an Oracle Cloud server
 browser/index.html      copy of the web app for opening without Python
 samples/                one AI-style and one human-style sample
 tests/                  run with: python -m unittest discover -s tests
