@@ -54,9 +54,9 @@ python -m aicheck check post.txt --json > result.json
 echo "Paste text here..." | python -m aicheck check
 ```
 
-**Browser only:** open `browser/index.html` directly, or turn on GitHub Pages for this repo to get a shareable link. This version uses the writing-style signals only.
+**Browser only:** open `browser/index.html` from any web host (GitHub Pages, Vercel, or `python -m http.server -d browser`). It starts with the writing-style signals. Press **Turn on AI model** to download two small language models (SmolLM2-135M base and instruct, about 275 MB, once) that run the Binoculars check inside the browser with [transformers.js](https://huggingface.co/docs/transformers.js). Your text still never leaves the device. The browser keeps the models cached and turns them back on automatically on later visits.
 
-**Deploy on Vercel:** import this repo in Vercel and deploy with the default settings. `vercel.json` tells Vercel to serve the `browser/` folder as a static site, and `.vercelignore` leaves the Python app out. The online version uses the writing-style signals only, because the language models are too large for serverless hosting.
+**Deploy on Vercel:** import this repo in Vercel and deploy with the default settings. `vercel.json` tells Vercel to serve the `browser/` folder as a static site, and `.vercelignore` leaves the Python app out. The language model runs in each visitor's browser, so no server or paid plan is needed.
 
 ### Choosing a model
 
@@ -135,3 +135,7 @@ tests/                  run with: python -m unittest discover -s tests
 ```
 
 The phrase lists in `aicheck/heuristics.py` are mirrored in `aicheck/web.html`. If you edit one, update the other and copy `web.html` to `browser/index.html`.
+
+### Browser model accuracy
+
+The in-browser model's threshold was calibrated inside Chromium on 116 answers from the [HC3](https://huggingface.co/datasets/Hello-SimpleAI/HC3) dataset (human answers vs. ChatGPT answers from 2022) and tested on 114 different ones. See `LMCFG` in `aicheck/web.html` for the numbers it uses. Newer AI models write less predictably than 2022 ChatGPT, so expect it to miss more of their text: a "human" verdict means "not obviously AI", not proof.

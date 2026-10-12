@@ -133,6 +133,13 @@ mark.s2 { background: none; padding: 0; border-bottom: 2px solid var(--accent); 
 .top3 b { color: var(--ai); font-variant-numeric: tabular-nums; }
 .note { margin: 0; font-size: 13px; color: var(--mid); }
 .err { margin: 0; font-size: 14px; color: var(--ai); }
+.lm { display: grid; gap: 10px; background: var(--sunk); border-radius: 12px; padding: 12px 14px; }
+.lm-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lm p { margin: 0; font-size: 13px; color: var(--muted); flex: 1 1 260px; }
+.lm p b { color: var(--fg); }
+.lm button { flex: none; }
+.prog { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.prog i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .2s ease; }
 
 details { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 4px 18px; }
 summary { cursor: pointer; font-weight: 700; padding: 12px 0; list-style: none; display: flex; justify-content: space-between; }
@@ -201,6 +208,13 @@ details a { color: var(--accent); font-weight: 700; }
 
     <div class="work">
       <div class="card">
+        <div class="lm" id="lmBox" hidden>
+          <div class="lm-row">
+            <p id="lmMsg"><b>Turn on the AI model</b> for a much more accurate check. It runs inside your browser, so your text still never leaves your device. One-time download of about 275 MB.</p>
+            <button class="go" id="lmBtn" type="button">Turn on AI model</button>
+          </div>
+          <div class="prog" id="lmProg" hidden><i id="lmBar"></i></div>
+        </div>
         <label for="txt" class="label">Your text</label>
         <textarea id="txt" spellcheck="false" placeholder="Paste an essay, post, email or page copy here. 150+ words gives the best result."></textarea>
         <div class="bar-row">
@@ -253,7 +267,8 @@ details a { color: var(--accent); font-weight: 700; }
       <summary>How does this work?</summary>
       <ul>
         <li><b>Writing-style signals.</b> AI tends to write sentences of similar length, lean on buzzwords like "delve" or "seamless", open sentences with "Moreover" or "Furthermore", and avoid contractions and personal voice. These six signals run right in your browser.</li>
-        <li><b>Language model (full app only).</b> When the app runs with its server (<code>python -m aicheck serve</code> or the Hugging Face Space), two Qwen2.5 models score how predictable each word is using the Binoculars method. AI text is unusually predictable. The model counts for 70% of the score and also flags individual sentences.</li>
+        <li><b>AI model.</b> Press <b>Turn on AI model</b> and two small language models (SmolLM2-135M, base and instruct) are downloaded once and run inside your browser. They score how predictable each word is using the Binoculars method: AI text is unusually predictable. The model counts for 70% of the score and also flags individual sentences. The full app (<code>python -m aicheck serve</code>) can use larger Qwen2.5 models instead.</li>
+        <li><b>How accurate?</b> On a held-out test of 114 answers from the HC3 dataset (people vs. ChatGPT, 2022), the browser model was right 96% of the time and never flagged a human answer. Newer AI models write less predictably: on a small set of texts from a 2026 model it caught only 4 out of 10. Treat a "human" verdict as "not obviously AI".</li>
         <li><b>It is an estimate.</b> Formulaic human writing can look like AI, and AI text edited by hand can pass as human. Short texts under 120 words are unreliable. Never use a single score as proof.</li>
         <li><b>Second opinion.</b> Compare with <a href="https://gptzero.me" target="_blank" rel="noopener">GPTZero</a> or <a href="https://copyleaks.com/ai-content-detector" target="_blank" rel="noopener">Copyleaks</a>. If tools disagree, nobody knows for sure.</li>
       </ul>
@@ -409,13 +424,100 @@ $("hist").onclick = e => {
 };
 $("histClear").onclick = () => { recent = []; saveHistory(); renderHistory(); };
 
+// In-browser language model (Binoculars), mirroring aicheck/model.py and aicheck/detector.py.
+// Threshold and scale were calibrated on 116 HC3 answers (people vs. ChatGPT), separate from the test set.
+const LMCFG = {
+  lib: "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/dist/transformers.min.js",
+  observer: "onnx-community/SmolLM2-135M-ONNX", performer: "HuggingFaceTB/SmolLM2-135M-Instruct", dtype: "int8",
+  maxTokens: 512, window: 256, threshold: 0.759, scale: 0.039, weight: 0.7, size: 275e6,
+};
+const LMKEY = "checkai.lm";
+let lm = null;
+const sigmoid = x => 1 / (1 + Math.exp(-Math.max(-60, Math.min(60, x))));
+const lmProb = b => sigmoid((LMCFG.threshold - b) / LMCFG.scale);
+
+async function loadLM() {
+  $("lmBtn").disabled = true; $("lmBtn").textContent = "Loading…"; $("lmProg").hidden = false;
+  const files = {};
+  const progress_callback = e => {
+    if (e.status !== "progress" || !e.total) return;
+    files[e.name + "/" + e.file] = [e.loaded, e.total];
+    const v = Object.values(files), got = v.reduce((a, x) => a + x[0], 0), all = Math.max(LMCFG.size, v.reduce((a, x) => a + x[1], 0));
+    $("lmBar").style.width = Math.round(got / all * 100) + "%";
+    $("lmMsg").innerHTML = `<b>Downloading the AI model…</b> ${Math.round(got / 1e6)} of ~${Math.round(all / 1e6)} MB. This only happens once.`;
+  };
+  try {
+    const T = await import(LMCFG.lib);
+    const tok = await T.AutoTokenizer.from_pretrained(LMCFG.observer, {progress_callback});
+    const obs = await T.AutoModelForCausalLM.from_pretrained(LMCFG.observer, {dtype: LMCFG.dtype, progress_callback});
+    const perf = await T.AutoModelForCausalLM.from_pretrained(LMCFG.performer, {dtype: LMCFG.dtype, progress_callback});
+    lm = {T, tok, obs, perf};
+    try { localStorage.setItem(LMKEY, "on"); } catch (e) { /* storage blocked */ }
+    $("lmBox").hidden = true;
+    $("mode").classList.add("on"); $("modeText").textContent = "AI model on · runs in your browser";
+    run();
+  } catch (e) {
+    $("lmProg").hidden = true; $("lmBtn").disabled = false; $("lmBtn").textContent = "Try again";
+    $("lmMsg").innerHTML = `<b>The AI model could not load</b> (${html(String(e.message || e))}). Writing-style signals still work.`;
+  }
+}
+
+// Per-token loss (performer on the real next token) and cross-entropy (observer vs performer).
+async function lmTokenScores(ids) {
+  const {T, obs, perf} = lm, loss = [], xent = [];
+  for (let s = 0; s < ids.length - 1; s += LMCFG.window) {
+    const chunk = ids.slice(s, s + LMCFG.window + 1), n = chunk.length;
+    if (n < 2) break;
+    const input_ids = new T.Tensor("int64", BigInt64Array.from(chunk.map(BigInt)), [1, n]);
+    const attention_mask = new T.Tensor("int64", new BigInt64Array(n).fill(1n), [1, n]);
+    const o = (await obs({input_ids, attention_mask})).logits, p = (await perf({input_ids, attention_mask})).logits;
+    const V = o.dims[2], od = o.data, pd = p.data;
+    for (let i = 0; i < n - 1; i++) {
+      const off = i * V; let pm = -Infinity, om = -Infinity;
+      for (let v = 0; v < V; v++) { if (pd[off + v] > pm) pm = pd[off + v]; if (od[off + v] > om) om = od[off + v]; }
+      let ps = 0, os = 0, dot = 0;
+      for (let v = 0; v < V; v++) { ps += Math.exp(pd[off + v] - pm); const e = Math.exp(od[off + v] - om); os += e; dot += e * pd[off + v]; }
+      const lse = pm + Math.log(ps);
+      loss.push(lse - pd[off + chunk[i + 1]]); xent.push(lse - dot / os);
+    }
+    o.dispose?.(); p.dispose?.();
+  }
+  return {loss, xent};
+}
+
+async function lmCheck(text) {
+  const r = localCheck(text);
+  if (r.words < 5) return r;
+  // Tokenize sentence by sentence (cuts fall on pre-token boundaries) so each token knows its sentence.
+  const ids = [], owner = []; let pos = 0;
+  r.sentences.forEach((s, si) => {
+    const end = si === r.sentences.length - 1 ? text.length : s.end;
+    if (end > pos) lm.tok.encode(text.slice(pos, end), {add_special_tokens: false}).forEach(id => { ids.push(id); owner.push(si); });
+    pos = Math.max(pos, end);
+  });
+  const truncated = ids.length > LMCFG.maxTokens;
+  const {loss, xent} = await lmTokenScores([lm.tok.bos_token_id ?? 0, ...ids.slice(0, LMCFG.maxTokens)]);
+  const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+  const b = mean(loss) / mean(xent), h = r.ai_probability;
+  r.ai_probability = LMCFG.weight * lmProb(b) + (1 - LMCFG.weight) * h;
+  r.verdict = verdictFor(r.ai_probability);
+  r.sentences = r.sentences.map((s, si) => {
+    const idx = owner.map((o, i) => o === si && i < loss.length ? i : -1).filter(i => i >= 0);
+    return {...s, ai_probability: idx.length >= 3 ? lmProb(mean(idx.map(i => loss[i])) / mean(idx.map(i => xent[i]))) : null};
+  });
+  r.model = {binoculars: b, threshold: LMCFG.threshold, calibrated: true};
+  if (truncated) r.warnings.push(`Long text: the AI model only read the first ${loss.length} tokens. The writing-style signals cover all of it.`);
+  return r;
+}
+
 async function run() {
   const text = normalize($("txt").value);
   $("err").hidden = true;
   if (!text.trim()) { $("err").textContent = "Paste some text first."; $("err").hidden = false; return; }
-  if (!server) return show(text, localCheck(text));
+  if (!server && !lm) return show(text, localCheck(text));
   $("run").disabled = true; $("run").textContent = "Checking…";
   try {
+    if (!server) { await new Promise(r => setTimeout(r, 30)); return show(text, await lmCheck(text)); }
     const res = await fetch("/api/check", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text})});
     const r = await res.json();
     if (!res.ok) throw new Error(r.error || res.statusText);
@@ -440,27 +542,33 @@ $("sAi").onclick = () => sample(SAMPLE_AI);
 $("sHu").onclick = () => sample(SAMPLE_HUMAN);
 $("clear").onclick = () => { $("txt").value = ""; updateCount(); reset(); $("txt").focus(); };
 $("new").onclick = () => { $("txt").value = ""; updateCount(); reset(); closeMenu(); $("txt").focus(); };
+$("lmBtn").onclick = loadLM;
 $("helpBtn").onclick = () => { closeMenu(); $("how").open = true; $("how").scrollIntoView({behavior: "smooth", block: "start"}); };
 $("txt").addEventListener("input", updateCount);
 $("txt").addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") run(); });
 
 (async () => {
   $("txt").value = SAMPLE_AI; updateCount(); run();
-  if (!/^https?:$/.test(location.protocol)) return;
-  try {
-    const ctl = new AbortController(); setTimeout(() => ctl.abort(), 1500);
-    const info = await (await fetch("/api/info", {signal: ctl.signal})).json();
-    if (info.model) {
-      server = true;
-      $("mode").classList.add("on");
-      $("modeText").textContent = "Language model on" + (info.calibrated ? " · calibrated" : "");
-      if (!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))
-        $("privacy").textContent = "Your text is sent to this app's server to be scored. It is not saved.";
-      run();
-    } else if ("model" in info) {
-      $("modeText").textContent = "Writing-style check · local app";
-    }
-  } catch (e) { /* no local server: browser-only mode */ }
+  if (/^https?:$/.test(location.protocol)) {
+    try {
+      const ctl = new AbortController(); setTimeout(() => ctl.abort(), 1500);
+      const info = await (await fetch("/api/info", {signal: ctl.signal})).json();
+      if (info.model) {
+        server = true;
+        $("mode").classList.add("on");
+        $("modeText").textContent = "Language model on" + (info.calibrated ? " · calibrated" : "");
+        if (!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))
+          $("privacy").textContent = "Your text is sent to this app's server to be scored. It is not saved.";
+        return run();
+      } else if ("model" in info) {
+        $("modeText").textContent = "Writing-style check · local app";
+      }
+    } catch (e) { /* no local server: browser-only mode */ }
+  }
+  // No server model: offer the in-browser one, and reload it from the browser cache if it was turned on before.
+  $("lmBox").hidden = false;
+  let on = false; try { on = localStorage.getItem(LMKEY) === "on"; } catch (e) { /* storage blocked */ }
+  if (on) loadLM();
 })();
 </script>
 </body>
