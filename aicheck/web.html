@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23f05216'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&display=swap">
 <style>
-/* Layout: one calm centered column (input card, result card, explainer), KoJi Launch palette */
+/* Layout: app shell. Left sidebar (samples, recent checks, mode, help) + workspace with input and result side by side on wide screens, stacked below 1180px; sidebar becomes a drawer below 900px. KoJi Launch palette */
 :root {
   --bg: #faf8f1;
   --surface: #ffffff;
@@ -25,45 +25,79 @@
   --human: #1f8a5b;
   --human-soft: #d9f0e3;
   --conn-soft: #dde8ef;
+  --shade: rgba(8, 28, 37, .35);
   --font: "DM Sans", "Segoe UI", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #030d17; --surface: #081c25; --sunk: #05141d; --fg: #eef2f4; --muted: #9fb0bb; --line: #17323e;
   --ai: #ff7a3d; --ai-soft: #3d1a0c; --mid: #f1b449; --mid-soft: #3a2b0e;
-  --human: #4cc98b; --human-soft: #0f3324; --conn-soft: #12324a; color-scheme: dark; } }
+  --human: #4cc98b; --human-soft: #0f3324; --conn-soft: #12324a; --shade: rgba(0, 0, 0, .6); color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #030d17; --surface: #081c25; --sunk: #05141d; --fg: #eef2f4; --muted: #9fb0bb; --line: #17323e;
   --ai: #ff7a3d; --ai-soft: #3d1a0c; --mid: #f1b449; --mid-soft: #3a2b0e;
-  --human: #4cc98b; --human-soft: #0f3324; --conn-soft: #12324a; color-scheme: dark; }
+  --human: #4cc98b; --human-soft: #0f3324; --conn-soft: #12324a; --shade: rgba(0, 0, 0, .6); color-scheme: dark; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
-.page { max-width: 780px; margin: 0 auto; padding-inline: 18px; padding-block: 20px 56px; display: grid; gap: 20px; }
+button { font: inherit; font-size: 14px; font-weight: 700; border-radius: 99px; padding: 9px 16px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+button:hover { border-color: var(--fg); }
+button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.brand { font-weight: 800; font-size: 18px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; }
-.brand .mark { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--accent-2), var(--accent)); display: grid; place-items: center; color: #ffffff; font-size: 14px; }
-.mode { font-size: 12px; font-weight: 500; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px; display: flex; align-items: center; gap: 6px; }
-.mode i { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.app { display: grid; grid-template-columns: 268px minmax(0, 1fr); min-height: 100vh; }
+
+/* Sidebar */
+.side { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--line); padding: 20px 14px; display: flex; flex-direction: column; gap: 22px; }
+.brand { font-weight: 800; font-size: 18px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 9px; padding: 0 6px; }
+.brand .mark { width: 28px; height: 28px; border-radius: 9px; background: linear-gradient(135deg, var(--accent-2), var(--accent)); display: grid; place-items: center; color: #ffffff; font-size: 14px; flex: none; }
+.new { width: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-color: transparent; color: #ffffff; box-shadow: 0 8px 20px -12px var(--accent); }
+.new:hover { border-color: transparent; filter: brightness(1.05); }
+.group { display: grid; gap: 2px; }
+.group h2 { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; padding: 0 8px; }
+.nav { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; border-radius: 10px; background: none; padding: 8px; font-weight: 500; color: var(--fg); min-width: 0; }
+.nav:hover { background: var(--sunk); }
+.nav .ico { width: 26px; height: 26px; border-radius: 8px; background: var(--sunk); display: grid; place-items: center; font-size: 13px; flex: none; }
+.nav:hover .ico { background: var(--surface); }
+.hist { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.hist .nav { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; }
+.hist .badge { font-size: 12px; font-weight: 800; text-align: center; border-radius: 8px; padding: 3px 0; font-variant-numeric: tabular-nums; }
+.hist .txt { display: grid; min-width: 0; line-height: 1.35; }
+.hist .txt span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+.hist .txt small { font-size: 11px; color: var(--muted); }
+.hist .nav.cur { background: var(--sunk); }
+.empty-hist { font-size: 13px; color: var(--muted); padding: 0 8px; margin: 0; }
+.clear-hist { justify-self: start; border: 0; background: none; padding: 4px 8px; font-size: 12px; font-weight: 500; color: var(--muted); }
+.clear-hist:hover { color: var(--accent); }
+.side-foot { margin-top: auto; display: grid; gap: 10px; }
+.mode { font-size: 12px; font-weight: 500; color: var(--muted); background: var(--sunk); border-radius: 10px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
+.mode i { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); flex: none; }
 .mode.on i { background: var(--human); }
+.privacy { font-size: 12px; color: var(--muted); margin: 0; padding: 0 8px; }
 
-.intro h1 { font-size: clamp(30px, 6vw, 44px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.05; margin: 12px 0 8px; text-wrap: balance; }
+/* Main */
+.main { min-width: 0; padding: 28px 32px 56px; display: grid; gap: 20px; align-content: start; max-width: 1480px; }
+.topbar { display: none; }
+.intro h1 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.1; margin: 0 0 6px; text-wrap: balance; }
 .intro h1 span { color: var(--accent); }
-.intro p { margin: 0; color: var(--muted); font-size: 16px; max-width: 58ch; }
+.intro p { margin: 0; color: var(--muted); font-size: 15px; max-width: 64ch; }
+
+.work { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (min-width: 1180px) { .work { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .work > .out { position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto; } .work textarea { min-height: 420px; } }
 
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
-textarea { width: 100%; min-height: 220px; resize: vertical; font: inherit; font-size: 16px; color: var(--fg); background: var(--sunk); border: 1px solid transparent; border-radius: 12px; padding: 14px 16px; line-height: 1.65; }
+textarea { width: 100%; min-height: 240px; resize: vertical; font: inherit; font-size: 16px; color: var(--fg); background: var(--sunk); border: 1px solid transparent; border-radius: 12px; padding: 14px 16px; line-height: 1.65; }
 textarea::placeholder { color: var(--muted); }
 textarea:focus { outline: none; border-color: var(--accent); background: var(--surface); }
 .bar-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; margin-right: auto; }
-button { font: inherit; font-size: 14px; font-weight: 700; border-radius: 99px; padding: 9px 16px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
-button:hover { border-color: var(--fg); }
-button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.kbd { font-size: 12px; color: var(--muted); }
 button.go { background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-color: transparent; color: #ffffff; padding-inline: 22px; box-shadow: 0 8px 20px -10px var(--accent); }
 button.go:disabled { opacity: .65; cursor: progress; }
 button.link { border: 0; background: none; padding: 6px 8px; color: var(--muted); font-weight: 500; }
 button.link:hover { color: var(--accent); }
+
+.placeholder { place-items: center; text-align: center; color: var(--muted); padding: 48px 24px; border-style: dashed; }
+.placeholder .big { width: 48px; height: 48px; border-radius: 14px; background: var(--sunk); display: grid; place-items: center; font-size: 22px; color: var(--accent); }
+.placeholder p { margin: 0; max-width: 34ch; }
 
 .result { gap: 18px; }
 .headline { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; }
@@ -80,7 +114,6 @@ button.link:hover { color: var(--accent); }
 
 .label { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .signals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 20px; margin: 0; padding: 0; list-style: none; }
-@media (max-width: 560px) { .signals { grid-template-columns: minmax(0, 1fr); } .headline { grid-template-columns: minmax(0, 1fr); gap: 10px; } .count { flex: 1 0 100%; } .bar-row .go { flex: 1 0 100%; order: 9; } }
 .sig { display: grid; gap: 4px; }
 .sig .row { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
 .sig .row span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -109,74 +142,123 @@ details[open] summary::after { content: "–"; }
 details ul { margin: 0 0 16px; padding-left: 18px; display: grid; gap: 8px; color: var(--fg); }
 details li::marker { color: var(--accent); }
 details a { color: var(--accent); font-weight: 700; }
-.foot { font-size: 12px; color: var(--muted); text-align: center; margin: 0; }
-@media (prefers-reduced-motion: reduce) { .scale b, .meter i { transition: none; } }
+
+.shade { display: none; }
+
+/* Narrow: sidebar turns into a slide-in drawer opened from the top bar */
+@media (max-width: 899px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { position: fixed; z-index: 20; left: 0; top: 0; width: min(300px, 86vw); transform: translateX(-100%); transition: transform .25s ease; box-shadow: 0 0 40px -10px var(--shade); visibility: hidden; }
+  .app.open .side { transform: none; visibility: visible; }
+  .app.open .shade { display: block; position: fixed; inset: 0; z-index: 10; background: var(--shade); }
+  .main { padding: 0 16px 48px; }
+  .topbar { display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 12px 0; margin-bottom: -8px; }
+  .topbar .menu { width: 40px; height: 40px; padding: 0; border-radius: 12px; display: grid; place-items: center; font-size: 18px; }
+  .topbar .brand { padding: 0; }
+  .kbd { display: none; }
+}
+@media (max-width: 560px) { .signals { grid-template-columns: minmax(0, 1fr); } .headline { grid-template-columns: minmax(0, 1fr); gap: 10px; } .count { flex: 1 0 100%; } .bar-row .go { flex: 1 0 100%; order: 9; } }
+@media (prefers-reduced-motion: reduce) { .scale b, .meter i, .side { transition: none; } }
 </style>
 </head>
 <body>
-<div class="page">
-  <div class="top">
+<div class="app" id="app">
+  <aside class="side" id="side" aria-label="Sidebar">
     <div class="brand"><span class="mark" aria-hidden="true">✓</span>CheckAI</div>
-    <div class="mode" id="mode"><i></i><span id="modeText">Writing-style check</span></div>
-  </div>
+    <button class="new" id="new" type="button">+ New check</button>
 
-  <div class="intro">
-    <h1>Was this written by AI<span>?</span></h1>
-    <p>Paste any text and get a quick read on whether it sounds machine-made, plus the exact phrases that give it away.</p>
-  </div>
-
-  <div class="card">
-    <label for="txt" class="label">Your text</label>
-    <textarea id="txt" spellcheck="false" placeholder="Paste an essay, post, email or page copy here. 150+ words gives the best result."></textarea>
-    <div class="bar-row">
-      <span class="count" id="count">0 words</span>
-      <button class="link" id="sAi" type="button">AI sample</button>
-      <button class="link" id="sHu" type="button">Human sample</button>
-      <button class="link" id="clear" type="button">Clear</button>
-      <button class="go" id="run" type="button">Check text</button>
+    <div class="group">
+      <h2>Try a sample</h2>
+      <button class="nav" id="sAi" type="button"><span class="ico" aria-hidden="true">🤖</span>AI-written sample</button>
+      <button class="nav" id="sHu" type="button"><span class="ico" aria-hidden="true">✍️</span>Human-written sample</button>
     </div>
-    <p class="err" id="err" role="alert" hidden></p>
-  </div>
 
-  <div class="card result" id="result" aria-live="polite" hidden>
-    <div class="headline">
-      <div class="pct" id="pct">0<small>%</small></div>
-      <div>
-        <span class="verdict v-mid" id="verdict">–</span>
-        <div class="scale"><b id="pin" style="left:0%"></b></div>
-        <div class="ends"><span>HUMAN</span><span>AI</span></div>
+    <div class="group">
+      <h2>Recent checks</h2>
+      <ul class="hist" id="hist"></ul>
+      <p class="empty-hist" id="histEmpty">Your checks show up here. They stay in this browser only.</p>
+      <button class="clear-hist" id="histClear" type="button" hidden>Clear history</button>
+    </div>
+
+    <div class="side-foot">
+      <button class="nav" id="helpBtn" type="button"><span class="ico" aria-hidden="true">?</span>How does this work?</button>
+      <div class="mode" id="mode"><i></i><span id="modeText">Writing-style check</span></div>
+      <p class="privacy" id="privacy">Your text never leaves your device.</p>
+    </div>
+  </aside>
+  <div class="shade" id="shade"></div>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="menu" id="menu" type="button" aria-label="Open menu" aria-controls="side" aria-expanded="false">☰</button>
+      <div class="brand"><span class="mark" aria-hidden="true">✓</span>CheckAI</div>
+    </div>
+
+    <div class="intro">
+      <h1>Was this written by AI<span>?</span></h1>
+      <p>Paste any text and get a quick read on whether it sounds machine-made, plus the exact phrases that give it away.</p>
+    </div>
+
+    <div class="work">
+      <div class="card">
+        <label for="txt" class="label">Your text</label>
+        <textarea id="txt" spellcheck="false" placeholder="Paste an essay, post, email or page copy here. 150+ words gives the best result."></textarea>
+        <div class="bar-row">
+          <span class="count" id="count">0 words</span>
+          <button class="link" id="clear" type="button">Clear</button>
+          <span class="kbd">Ctrl + Enter</span>
+          <button class="go" id="run" type="button">Check text</button>
+        </div>
+        <p class="err" id="err" role="alert" hidden></p>
+      </div>
+
+      <div class="out">
+        <div class="card placeholder" id="placeholder">
+          <div class="big" aria-hidden="true">✓</div>
+          <p>Paste some text and press <b>Check text</b>. The score and the phrases that sound machine-made will appear here.</p>
+        </div>
+
+        <div class="card result" id="result" aria-live="polite" hidden>
+          <div class="headline">
+            <div class="pct" id="pct">0<small>%</small></div>
+            <div>
+              <span class="verdict v-mid" id="verdict">–</span>
+              <div class="scale"><b id="pin" style="left:0%"></b></div>
+              <div class="ends"><span>HUMAN</span><span>AI</span></div>
+            </div>
+          </div>
+          <div class="meta" id="meta"></div>
+          <div id="notes"></div>
+
+          <div class="label">Why</div>
+          <ul class="signals" id="signals"></ul>
+
+          <div class="label" id="topLabel" hidden>Most AI-like sentences</div>
+          <ul class="top3" id="top3"></ul>
+
+          <div class="label">Your text, annotated</div>
+          <div class="legend">
+            <span><mark class="c">buzzword</mark></span>
+            <span><mark class="k">stock transition</mark></span>
+            <span><mark class="h">personal voice</mark></span>
+            <span id="lgModel" hidden><mark class="s1">leans AI (model)</mark></span>
+            <span id="lgModel2" hidden><mark class="s2">flagged by model</mark></span>
+          </div>
+          <div class="text" id="out"></div>
+        </div>
       </div>
     </div>
-    <div class="meta" id="meta"></div>
-    <div id="notes"></div>
 
-    <div class="label">Why</div>
-    <ul class="signals" id="signals"></ul>
-
-    <div class="label" id="topLabel" hidden>Most AI-like sentences</div>
-    <ul class="top3" id="top3"></ul>
-
-    <div class="label">Your text, annotated</div>
-    <div class="legend">
-      <span><mark class="c">buzzword</mark></span>
-      <span><mark class="k">stock transition</mark></span>
-      <span><mark class="h">personal voice</mark></span>
-      <span id="lgModel" hidden><mark class="s1">leans AI (model)</mark></span>
-      <span id="lgModel2" hidden><mark class="s2">flagged by model</mark></span>
-    </div>
-    <div class="text" id="out"></div>
-  </div>
-
-  <details>
-    <summary>How does this work?</summary>
-    <ul>
-      <li><b>Writing-style signals.</b> AI tends to write sentences of similar length, lean on buzzwords like "delve" or "seamless", open sentences with "Moreover" or "Furthermore", and avoid contractions and personal voice. These six signals run right in your browser.</li>
-      <li><b>Language model (full app only).</b> When the app runs with its server (<code>python -m aicheck serve</code> or the Hugging Face Space), two Qwen2.5 models score how predictable each word is using the Binoculars method. AI text is unusually predictable. The model counts for 70% of the score and also flags individual sentences.</li>
-      <li><b>It is an estimate.</b> Formulaic human writing can look like AI, and AI text edited by hand can pass as human. Short texts under 120 words are unreliable. Never use a single score as proof.</li>
-      <li><b>Second opinion.</b> Compare with <a href="https://gptzero.me" target="_blank" rel="noopener">GPTZero</a> or <a href="https://copyleaks.com/ai-content-detector" target="_blank" rel="noopener">Copyleaks</a>. If tools disagree, nobody knows for sure.</li>
-    </ul>
-  </details>
-  <p class="foot" id="privacy">Your text never leaves your device.</p>
+    <details id="how">
+      <summary>How does this work?</summary>
+      <ul>
+        <li><b>Writing-style signals.</b> AI tends to write sentences of similar length, lean on buzzwords like "delve" or "seamless", open sentences with "Moreover" or "Furthermore", and avoid contractions and personal voice. These six signals run right in your browser.</li>
+        <li><b>Language model (full app only).</b> When the app runs with its server (<code>python -m aicheck serve</code> or the Hugging Face Space), two Qwen2.5 models score how predictable each word is using the Binoculars method. AI text is unusually predictable. The model counts for 70% of the score and also flags individual sentences.</li>
+        <li><b>It is an estimate.</b> Formulaic human writing can look like AI, and AI text edited by hand can pass as human. Short texts under 120 words are unreliable. Never use a single score as proof.</li>
+        <li><b>Second opinion.</b> Compare with <a href="https://gptzero.me" target="_blank" rel="noopener">GPTZero</a> or <a href="https://copyleaks.com/ai-content-detector" target="_blank" rel="noopener">Copyleaks</a>. If tools disagree, nobody knows for sure.</li>
+      </ul>
+    </details>
+  </main>
 </div>
 
 <script>
@@ -254,6 +336,7 @@ function verdictFor(p) {
   return p >= .75 ? "Likely AI-written" : p >= .55 ? "Leans AI" : p > .40 ? "Mixed signals" : p > .25 ? "Leans human" : "Likely human-written";
 }
 
+
 const $ = id => document.getElementById(id);
 const html = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const tone = v => v > .6 ? "var(--ai)" : v > .35 ? "var(--gold)" : "var(--human)";
@@ -275,6 +358,7 @@ function annotate(text, r) {
 
 function show(text, r) {
   const p = Math.round(r.ai_probability * 100);
+  $("placeholder").hidden = true;
   $("result").hidden = false;
   $("pct").innerHTML = p + "<small>%</small>";
   $("pin").style.left = p + "%";
@@ -290,7 +374,40 @@ function show(text, r) {
   $("topLabel").hidden = !top.length; $("lgModel").hidden = $("lgModel2").hidden = !top.length;
   $("top3").innerHTML = top.map(s => `<li><b>${Math.round(s.ai_probability * 100)}%</b><span>${html(s.text)}</span></li>`).join("");
   $("out").innerHTML = annotate(text, r);
+  remember(text, r.ai_probability);
 }
+
+function reset() {
+  $("result").hidden = true; $("placeholder").hidden = false; $("err").hidden = true;
+  renderHistory();
+}
+
+// Recent checks live in this browser only (a per-viewer convenience, safe to lose).
+const HKEY = "checkai.recent", HMAX = 8;
+let recent = [];
+try { recent = JSON.parse(localStorage.getItem(HKEY) || "[]"); if (!Array.isArray(recent)) recent = []; } catch (e) { recent = []; }
+function saveHistory() { try { localStorage.setItem(HKEY, JSON.stringify(recent)); } catch (e) { /* storage blocked */ } }
+function remember(text, p) {
+  if (text === SAMPLE_AI || text === SAMPLE_HUMAN) return renderHistory(text);
+  recent = [{text, p, t: Date.now()}, ...recent.filter(h => h.text !== text)].slice(0, HMAX);
+  saveHistory(); renderHistory(text);
+}
+function ago(t) {
+  const m = Math.round((Date.now() - t) / 60000);
+  return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : new Date(t).toLocaleDateString();
+}
+function renderHistory(current) {
+  $("histEmpty").hidden = recent.length > 0; $("histClear").hidden = !recent.length;
+  $("hist").innerHTML = recent.map((h, i) => {
+    const p = Math.round(h.p * 100), cls = p >= 55 ? "v-ai" : p > 40 ? "v-mid" : "v-human";
+    return `<li><button class="nav${h.text === current ? " cur" : ""}" type="button" data-i="${i}"><span class="badge ${cls}">${p}%</span><span class="txt"><span>${html(h.text.trim().slice(0, 80))}</span><small>${words(h.text).length} words · ${ago(h.t)}</small></span></button></li>`;
+  }).join("");
+}
+$("hist").onclick = e => {
+  const b = e.target.closest("button[data-i]"); if (!b) return;
+  $("txt").value = recent[+b.dataset.i].text; updateCount(); closeMenu(); run();
+};
+$("histClear").onclick = () => { recent = []; saveHistory(); renderHistory(); };
 
 async function run() {
   const text = normalize($("txt").value);
@@ -309,11 +426,21 @@ async function run() {
   } finally { $("run").disabled = false; $("run").textContent = "Check text"; }
 }
 
+// Drawer on narrow screens
+function openMenu() { $("app").classList.add("open"); $("menu").setAttribute("aria-expanded", "true"); $("new").focus(); }
+function closeMenu() { if (!$("app").classList.contains("open")) return; $("app").classList.remove("open"); $("menu").setAttribute("aria-expanded", "false"); }
+$("menu").onclick = openMenu;
+$("shade").onclick = closeMenu;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeMenu(); });
+
 function updateCount() { $("count").textContent = words($("txt").value).length + " words"; }
+function sample(t) { $("txt").value = t; updateCount(); closeMenu(); run(); }
 $("run").onclick = run;
-$("sAi").onclick = () => { $("txt").value = SAMPLE_AI; updateCount(); run(); };
-$("sHu").onclick = () => { $("txt").value = SAMPLE_HUMAN; updateCount(); run(); };
-$("clear").onclick = () => { $("txt").value = ""; updateCount(); $("result").hidden = true; $("txt").focus(); };
+$("sAi").onclick = () => sample(SAMPLE_AI);
+$("sHu").onclick = () => sample(SAMPLE_HUMAN);
+$("clear").onclick = () => { $("txt").value = ""; updateCount(); reset(); $("txt").focus(); };
+$("new").onclick = () => { $("txt").value = ""; updateCount(); reset(); closeMenu(); $("txt").focus(); };
+$("helpBtn").onclick = () => { closeMenu(); $("how").open = true; $("how").scrollIntoView({behavior: "smooth", block: "start"}); };
 $("txt").addEventListener("input", updateCount);
 $("txt").addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") run(); });
 
