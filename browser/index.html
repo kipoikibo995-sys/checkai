@@ -660,9 +660,18 @@ self.onmessage = async ({data: m}) => {
 const lmJobs = new Map(); let lmSeq = 0;
 function lmCall(msg) { return new Promise((resolve, reject) => { const id = ++lmSeq; lmJobs.set(id, {resolve, reject}); lm.postMessage({...msg, id}); }); }
 
-function loadLM() {
+// Is the model already saved in this browser? true / false, or null when the browser cannot save it (e.g. some private windows).
+async function lmCached() {
+  try { const keys = await (await caches.open("transformers-cache")).keys(); return keys.filter(r => /\.onnx/.test(r.url)).length >= 2; }
+  catch (e) { return null; }
+}
+
+async function loadLM() {
   $("lmBtn").disabled = true; $("lmBtn").textContent = "Loading…"; $("lmProg").hidden = false; $("lmBar").style.width = "0%";
-  $("lmMsg").innerHTML = "<b>Starting the download…</b>";
+  const cached = await lmCached();
+  $("lmMsg").innerHTML = cached ? "<b>Loading the AI model saved in this browser…</b> No download needed."
+    : cached === null ? "<b>Starting the download…</b> This browser window cannot save files (private mode?), so the model will download again next time."
+    : "<b>Starting the download…</b>";
   const files = {};
   let w;
   const fail = msg => {
@@ -678,14 +687,17 @@ function loadLM() {
       files[m.key] = [m.loaded, m.total];
       const v = Object.values(files), got = v.reduce((a, x) => a + x[0], 0), all = Math.max(LMCFG.size, v.reduce((a, x) => a + x[1], 0));
       $("lmBar").style.width = Math.round(got / all * 100) + "%";
+      if (cached) return;
       $("lmMsg").innerHTML = got >= all * .995
         ? "<b>Almost ready:</b> starting the AI model. This can take up to a minute on slower computers."
         : `<b>Downloading the AI model…</b> ${Math.round(got / 1e6)} of ~${Math.round(all / 1e6)} MB. This only happens once.`;
     } else if (m.type === "ready") {
       lm = w;
       try { localStorage.setItem(LMKEY, "on"); } catch (e) { /* storage blocked */ }
+      // Ask the browser not to clear the saved model when disk space runs low.
+      try { navigator.storage?.persist?.(); } catch (e) { /* not supported */ }
       $("lmBox").hidden = true;
-      $("mode").classList.add("on"); $("modeText").textContent = "AI model on · runs in your browser";
+      $("mode").classList.add("on"); $("modeText").textContent = "AI model on · saved in this browser";
       if ($("txt").value.trim()) run();
     } else if (m.type === "result" || m.type === "error") {
       const job = lmJobs.get(m.id);
@@ -781,7 +793,7 @@ $("txt").addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.ke
   // No server model: offer the in-browser one, and reload it from the browser cache if it was turned on before.
   $("lmBox").hidden = false;
   let on = false; try { on = localStorage.getItem(LMKEY) === "on"; } catch (e) { /* storage blocked */ }
-  if (on) loadLM();
+  if (on || await lmCached()) loadLM();
 })();
 </script>
 </body>
