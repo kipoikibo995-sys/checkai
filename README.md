@@ -54,7 +54,7 @@ python -m aicheck check post.txt --json > result.json
 echo "Paste text here..." | python -m aicheck check
 ```
 
-**Browser only:** open `browser/index.html` from any web host (GitHub Pages, Vercel, or `python -m http.server -d browser`). It starts with the writing-style signals. Press **Turn on AI model** to download two small language models (SmolLM2-135M base and instruct, about 275 MB, once) that run the Binoculars check inside the browser with [transformers.js](https://huggingface.co/docs/transformers.js). Your text still never leaves the device. The browser keeps the models cached and turns them back on automatically on later visits.
+**Browser only:** open `browser/index.html` from any web host (GitHub Pages, Vercel, or `python -m http.server -d browser`). It starts with the writing-style signals. Press **Turn on AI model** to download two small language models once: SmolLM2-360M base and instruct (about 730 MB, the default on computers) or the lite SmolLM2-135M pair (about 275 MB, suggested on phones) that run the Binoculars check inside the browser with [transformers.js](https://huggingface.co/docs/transformers.js). Your text still never leaves the device. The browser keeps the models cached and turns them back on automatically on later visits.
 
 **Deploy on Vercel:** import this repo in Vercel and deploy with the default settings. `vercel.json` tells Vercel to serve the `browser/` folder as a static site, and `.vercelignore` leaves the Python app out. The language model runs in each visitor's browser, so no server or paid plan is needed.
 
@@ -138,4 +138,4 @@ The phrase lists in `aicheck/heuristics.py` are mirrored in `aicheck/web.html`. 
 
 ### Browser model accuracy
 
-The in-browser model's threshold was calibrated inside Chromium on 116 answers from the [HC3](https://huggingface.co/datasets/Hello-SimpleAI/HC3) dataset (human answers vs. ChatGPT answers from 2022) and tested on 114 different ones. See `LMCFG` in `aicheck/web.html` for the numbers it uses. Newer AI models write less predictably than 2022 ChatGPT, so expect it to miss more of their text: a "human" verdict means "not obviously AI", not proof.
+Each in-browser model's threshold was calibrated inside Chromium on 116 answers from the [HC3](https://huggingface.co/datasets/Hello-SimpleAI/HC3) dataset (human answers vs. ChatGPT answers from 2022) and tested on 114 different ones. On the held-out answers the 360M pair is right 98% of the time and the 135M pair 93%. See `LMMODELS` in `aicheck/web.html` for the numbers they use. Newer AI models write less predictably than 2022 ChatGPT, so expect it to miss more of their text: a "human" verdict means "not obviously AI", not proof.

@@ -374,8 +374,8 @@ details a { color: var(--accent); font-weight: 700; }
       <summary>How does this work?</summary>
       <ul>
         <li><b>Writing-style signals.</b> AI tends to write sentences of similar length, lean on buzzwords like "delve" or "seamless", open sentences with "Moreover" or "Furthermore", and avoid contractions and personal voice. These six signals run right in your browser.</li>
-        <li><b>AI model.</b> Press <b>Turn on AI model</b> and two small language models (SmolLM2-135M, base and instruct) are downloaded once and run inside your browser. They score how predictable each word is using the Binoculars method: AI text is unusually predictable. The model counts for 70% of the score and also flags individual sentences. The full app (<code>python -m aicheck serve</code>) can use larger Qwen2.5 models instead.</li>
-        <li><b>How accurate?</b> On a held-out test of 114 answers from the HC3 dataset (people vs. ChatGPT, 2022), the browser model was right 93% of the time (it caught 86% of the AI answers) and never flagged a human answer. Newer AI models write less predictably: on a small set of texts from a 2026 model it caught only 4 out of 10. Treat a "human" verdict as "not obviously AI".</li>
+        <li><b>AI model.</b> Press <b>Turn on AI model</b> and two small language models (SmolLM2, base and instruct) are downloaded once and run inside your browser. The accurate pair (360M, about 730 MB) is best on a computer; the lite pair (135M, about 275 MB) suits phones and slow computers. They score how predictable each word is using the Binoculars method: AI text is unusually predictable. The model counts for 70% of the score and also flags individual sentences. The full app (<code>python -m aicheck serve</code>) can use larger Qwen2.5 models instead.</li>
+        <li><b>How accurate?</b> On a held-out test of 114 answers from the HC3 dataset (people vs. ChatGPT, 2022), the accurate model was right 98% of the time: it caught every AI answer and wrongly flagged 2 of 57 human answers. The lite model was right 93% of the time (it caught 86% of the AI answers and flagged no human answer). Newer AI models write less predictably: on a small set of 11 AI texts mostly from a 2026 model, the accurate model caught 6 and the lite model 5. Treat a "human" verdict as "not obviously AI".</li>
         <li><b>It is an estimate.</b> Formulaic human writing can look like AI, and AI text edited by hand can pass as human. Short texts under 120 words are unreliable. Never use a single score as proof.</li>
         <li><b>Second opinion.</b> Compare with <a href="https://gptzero.me" target="_blank" rel="noopener">GPTZero</a> or <a href="https://copyleaks.com/ai-content-detector" target="_blank" rel="noopener">Copyleaks</a>. If tools disagree, nobody knows for sure.</li>
       </ul>
@@ -515,6 +515,9 @@ function annotate(text, r) {
 }
 
 function show(text, r) {
+  // Single-sentence model scores are much noisier than the whole-text score, so they are only shown
+  // when the text as a whole shows AI signs; otherwise a human text would list "AI-like" sentences.
+  if (r.ai_probability < .4) r = {...r, sentences: r.sentences.map(s => ({...s, ai_probability: null}))};
   const p = Math.round(r.ai_probability * 100);
   $("placeholder").hidden = true;
   $("result").hidden = false;
@@ -607,7 +610,7 @@ const LMCFG = {
 };
 const LMMODELS = {
   full: {label: "Accurate", observer: "onnx-community/SmolLM2-360M-ONNX", performer: "HuggingFaceTB/SmolLM2-360M-Instruct",
-         threshold: 0.760, scale: 0.045, size: 730e6},
+         threshold: 0.732, scale: 0.048, size: 730e6},
   lite: {label: "Lite", observer: "onnx-community/SmolLM2-135M-ONNX", performer: "HuggingFaceTB/SmolLM2-135M-Instruct",
          threshold: 0.753, scale: 0.038, size: 275e6},
 };
