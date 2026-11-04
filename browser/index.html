@@ -599,10 +599,10 @@ function show(text, r) {
   // when the text as a whole shows AI signs; otherwise a human text would list "AI-like" sentences.
   if (r.ai_probability < .4) r = {...r, sentences: r.sentences.map(s => ({...s, ai_probability: null}))};
   const p = Math.round(r.ai_probability * 100);
-  $("deWarn").hidden = r.lang !== "de";
-  if (r.lang === "de") $("deWarnText").innerHTML = r.model
-    ? "German support is <b>experimental</b>. In our tests this model was right only about 2 times in 3: it missed more than half of the AI texts and wrongly flagged about 1 in 10 texts written by people. Never treat this result as evidence on its own."
-    : "German support is <b>experimental</b>, and without the German AI model only the writing-style signals ran. They rarely catch German AI text, so this result says very little.";
+  // The low-reliability warning shows on German results from the German model; before it is turned on,
+  // the box above the text field already explains the German option.
+  $("deWarn").hidden = !(r.lang === "de" && r.model);
+  if (!$("deWarn").hidden) $("deWarnText").innerHTML = "German support is <b>experimental</b>. In our tests this model was right only about 2 times in 3: it missed more than half of the AI texts and wrongly flagged about 1 in 10 texts written by people. Never treat this result as evidence on its own.";
   $("placeholder").hidden = true;
   $("result").hidden = false;
   $("pct").innerHTML = p + "<small>%</small>";
