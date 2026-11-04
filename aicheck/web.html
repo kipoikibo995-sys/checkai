@@ -3,7 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Koji AI Checker</title>
+<title>Free AI Detector: Check If Text Is AI-Written | Koji AI Checker</title>
+<meta name="description" content="Free AI detector that runs in your browser. Paste English text to see how likely it was written by ChatGPT or another AI, and which phrases give it away.">
+<link rel="canonical" href="https://kojicheck.kojilaunch.com/">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#f05216">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="KoJi Academy">
+<meta property="og:url" content="https://kojicheck.kojilaunch.com/">
+<meta property="og:title" content="Free AI Detector: Check If Text Is AI-Written | Koji AI Checker">
+<meta property="og:description" content="Free AI detector that runs in your browser. Paste English text to see how likely it was written by ChatGPT or another AI, and which phrases give it away.">
+<meta property="og:image" content="https://kojicheck.kojilaunch.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Koji AI Checker: free AI detector that runs in your browser">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Free AI Detector: Check If Text Is AI-Written | Koji AI Checker">
+<meta name="twitter:description" content="Free AI detector that runs in your browser. Paste English text to see how likely it was written by ChatGPT or another AI, and which phrases give it away.">
+<meta name="twitter:image" content="https://kojicheck.kojilaunch.com/og.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "WebApplication", "name": "Koji AI Checker", "url": "https://kojicheck.kojilaunch.com/", "description": "Free AI detector that runs in your browser. Paste English text to see how likely it was written by ChatGPT or another AI, and which phrases give it away.", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Any (runs in a web browser)", "browserRequirements": "Requires JavaScript", "inLanguage": "en", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "featureList": ["AI text detection in the browser", "No sign-up", "Text never leaves your device", "Highlights AI-like phrases and sentences", "Plain-language explanation of the result"], "publisher": {"@type": "Organization", "name": "KoJi Academy", "url": "https://kojilaunch.com/"}}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is Koji AI Checker free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. It is free to use, with no sign-up and no limit on how many texts you check."}}, {"@type": "Question", "name": "Is my text uploaded or stored?", "acceptedAnswer": {"@type": "Answer", "text": "No. The check runs inside your browser, including the AI model, so your text never leaves your device. Recent checks are kept only in your own browser and you can clear them at any time."}}, {"@type": "Question", "name": "How accurate is this AI detector?", "acceptedAnswer": {"@type": "Answer", "text": "On a held-out test of 114 answers from the public HC3 dataset (people vs. ChatGPT), the Accurate model was right 98% of the time and the Lite model 93%. Newer AI models write less predictably and are harder to catch, so treat the score as a hint, not as proof."}}, {"@type": "Question", "name": "How does it detect AI-written text?", "acceptedAnswer": {"@type": "Answer", "text": "It combines two methods. A small language model scores how predictable each word is (the Binoculars method), because AI text is unusually predictable. Six writing-style signals add evidence, such as AI buzzwords, stock transitions like \"Moreover\", even sentence lengths and a lack of personal voice."}}, {"@type": "Question", "name": "Can it detect ChatGPT, Claude and Gemini?", "acceptedAnswer": {"@type": "Answer", "text": "It looks for patterns common to text from large language models rather than one specific product, so it can flag text from ChatGPT, Claude, Gemini and similar tools. Heavily edited or paraphrased AI text is harder to detect."}}, {"@type": "Question", "name": "Which languages does it support?", "acceptedAnswer": {"@type": "Answer", "text": "English. Text in other languages will not get a reliable score."}}, {"@type": "Question", "name": "How long should the text be?", "acceptedAnswer": {"@type": "Answer", "text": "150 words or more gives the best result. Results for texts under 120 words are unreliable."}}]}]</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 37'%3E%3Cpath d='M10 0h12a17.5 17.5 0 0 1 0 35H10z' fill='%23f05216'/%3E%3Cpath d='M0 6h4a9 9 0 0 1 9 9v22H0z' fill='%23081c25'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800;9..40,900&display=swap">
 <style>
@@ -85,6 +104,11 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px soli
 .foot-col a { font-size: 14px; line-height: 1.3; color: #c9d4d8; text-decoration: none; }
 .foot-col a:hover { color: #ffffff; }
 .foot-bottom { border-top: 1px solid #79878b60; padding-top: 15px; width: 88%; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: #d6dfe2; }
+.faq { display: grid; gap: 14px; padding: 4px 2px; }
+.faq h2 { margin: 6px 0 0; font-size: 22px; letter-spacing: -0.03em; }
+.faq .qa { display: grid; gap: 4px; border-top: 1px solid var(--line); padding-top: 12px; }
+.faq h3 { margin: 0; font-size: 15px; }
+.faq p { margin: 0; color: var(--muted); font-size: 14px; max-width: 80ch; }
 .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
 @media (max-width: 1100px) { .site-links { gap: 0; } .site-links a { padding: 10px 8px; } }
 @media (max-width: 899px) {
@@ -105,7 +129,7 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px soli
 .new { width: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-color: transparent; color: #ffffff; box-shadow: 0 8px 20px -12px var(--accent); }
 .new:hover { border-color: transparent; filter: brightness(1.05); }
 .group { display: grid; gap: 2px; }
-.group h2 { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; padding: 0 8px; }
+.group .h { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; padding: 0 8px; }
 .nav { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; border-radius: 10px; background: none; padding: 8px; font-weight: 500; color: var(--fg); min-width: 0; }
 .nav:hover { background: var(--sunk); }
 .nav .ico { width: 26px; height: 26px; border-radius: 8px; background: var(--sunk); display: grid; place-items: center; font-size: 13px; flex: none; }
@@ -176,7 +200,7 @@ button.link:hover { color: var(--accent); }
 .steps b { color: var(--fg); display: block; font-size: 15px; }
 .try { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
 .summary { display: grid; gap: 8px; }
-.summary h3 { margin: 0; font-size: 18px; line-height: 1.35; letter-spacing: -0.01em; }
+.summary .sum-h { margin: 0; font-weight: 700; font-size: 18px; line-height: 1.35; letter-spacing: -0.01em; }
 .reasons { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
 .reasons li::marker { color: var(--accent); }
 .hint { margin: 0; font-size: 12px; color: var(--muted); }
@@ -284,13 +308,13 @@ details a { color: var(--accent); font-weight: 700; }
     <button class="new" id="new" type="button">+ New check</button>
 
     <div class="group">
-      <h2>Try a sample</h2>
+      <p class="h">Try a sample</p>
       <button class="nav" id="sAi" type="button"><span class="ico" aria-hidden="true">🤖</span>AI-written sample</button>
       <button class="nav" id="sHu" type="button"><span class="ico" aria-hidden="true">✍️</span>Human-written sample</button>
     </div>
 
     <div class="group">
-      <h2>Recent checks</h2>
+      <p class="h">Recent checks</p>
       <ul class="hist" id="hist"></ul>
       <p class="empty-hist" id="histEmpty">Your checks show up here. They stay in this browser only.</p>
       <button class="clear-hist" id="histClear" type="button" hidden>Clear history</button>
@@ -314,9 +338,9 @@ details a { color: var(--accent); font-weight: 700; }
     </div>
 
     <div class="intro">
-      <p class="eyebrow">Koji AI Checker</p>
+      <p class="eyebrow">Free AI detector · Koji AI Checker</p>
       <h1>Was this written by AI<span>?</span></h1>
-      <p>Paste any text and get a quick read on whether it sounds machine-made, plus the exact phrases that give it away.</p>
+      <p>Paste any English text and this free AI detector shows how likely it was written by ChatGPT or another AI, plus the exact phrases that give it away. No sign-up, and your text never leaves your device.</p>
     </div>
 
     <div class="work">
@@ -370,7 +394,7 @@ details a { color: var(--accent); font-weight: 700; }
             </div>
           </div>
           <div class="summary">
-            <h3 id="sumHead"></h3>
+            <p class="sum-h" id="sumHead"></p>
             <ul class="reasons" id="reasons"></ul>
           </div>
           <div id="notes"></div>
@@ -409,6 +433,17 @@ details a { color: var(--accent); font-weight: 700; }
         <li><b>Second opinion.</b> Compare with <a href="https://gptzero.me" target="_blank" rel="noopener">GPTZero</a> or <a href="https://copyleaks.com/ai-content-detector" target="_blank" rel="noopener">Copyleaks</a>. If tools disagree, nobody knows for sure.</li>
       </ul>
     </details>
+
+    <section class="faq" aria-labelledby="faqTitle">
+      <h2 id="faqTitle">AI detector FAQ</h2>
+      <div class="qa"><h3>Is Koji AI Checker free?</h3><p>Yes. It is free to use, with no sign-up and no limit on how many texts you check.</p></div>
+      <div class="qa"><h3>Is my text uploaded or stored?</h3><p>No. The check runs inside your browser, including the AI model, so your text never leaves your device. Recent checks are kept only in your own browser and you can clear them at any time.</p></div>
+      <div class="qa"><h3>How accurate is this AI detector?</h3><p>On a held-out test of 114 answers from the public HC3 dataset (people vs. ChatGPT), the Accurate model was right 98% of the time and the Lite model 93%. Newer AI models write less predictably and are harder to catch, so treat the score as a hint, not as proof.</p></div>
+      <div class="qa"><h3>How does it detect AI-written text?</h3><p>It combines two methods. A small language model scores how predictable each word is (the Binoculars method), because AI text is unusually predictable. Six writing-style signals add evidence, such as AI buzzwords, stock transitions like “Moreover”, even sentence lengths and a lack of personal voice.</p></div>
+      <div class="qa"><h3>Can it detect ChatGPT, Claude and Gemini?</h3><p>It looks for patterns common to text from large language models rather than one specific product, so it can flag text from ChatGPT, Claude, Gemini and similar tools. Heavily edited or paraphrased AI text is harder to detect.</p></div>
+      <div class="qa"><h3>Which languages does it support?</h3><p>English. Text in other languages will not get a reliable score.</p></div>
+      <div class="qa"><h3>How long should the text be?</h3><p>150 words or more gives the best result. Results for texts under 120 words are unreliable.</p></div>
+    </section>
   </main>
 </div>
 <footer class="site-foot">
