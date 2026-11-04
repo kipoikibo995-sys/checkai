@@ -1,7 +1,7 @@
 """Writing-style signals that need no model, so they run anywhere.
 
 Each signal is a value from 0 to 1, where 1 means "reads like AI".
-The phrase lists are tuned for English, with a smaller Vietnamese set.
+The phrase lists are tuned for English, with smaller Vietnamese and German sets.
 Keep them in sync with the copy in aicheck/web.html.
 """
 
@@ -33,6 +33,8 @@ CLICHES = [
     "trong thế giới", "đóng vai trò quan trọng", "không chỉ", "mà còn", "hành trình",
     "khám phá", "trải nghiệm", "đầy ý nghĩa", "chìa khóa", "nâng tầm", "lan tỏa",
     "đa dạng", "tối ưu", "không thể phủ nhận", "đáp ứng nhu cầu", "hãy cùng", "đồng hành",
+    # German
+    "in der heutigen schnelllebigen welt", "in der heutigen zeit", "in der heutigen digitalen welt", "spielt eine entscheidende rolle", "spielt eine wichtige rolle", "spielen eine entscheidende rolle", "von entscheidender bedeutung", "es ist wichtig zu beachten", "es ist erwähnenswert", "nahtlos", "maßgeschneidert", "maßgeschneiderte", "ganzheitlich", "ganzheitliche", "vielfältige", "eine breite palette", "eine vielzahl von", "tauchen sie ein", "tauche ein", "eintauchen", "entdecken sie", "unverzichtbar", "unverzichtbare", "bereichern", "zeugnis für", "nicht nur", "sondern auch", "innovative", "innovativen", "revolutionieren", "auf die nächste stufe", "auf ein neues level", "inspirierend", "inspirierende", "eindrucksvolle", "tiefgründig", "tiefgründiges", "bedeutungsvoll", "bedeutungsvolles", "facettenreich", "atemberaubend", "atemberaubende", "unvergesslich", "unvergessliche", "egal ob", "wenn es um", "in der welt der", "verlässlicher begleiter", "das volle potenzial", "ihr volles potenzial",
 ]
 
 # Transition words that AI likes to open sentences with.
@@ -42,6 +44,8 @@ CONNECTORS = [
     "to summarize", "consequently", "therefore", "thus", "notably", "importantly",
     "as a result", "on the other hand", "that said", "by contrast", "in essence",
     "bên cạnh đó", "hơn nữa", "ngoài ra", "tóm lại", "nhìn chung", "cuối cùng", "tuy nhiên",
+    # German
+    "darüber hinaus", "außerdem", "zudem", "des weiteren", "ferner", "zusätzlich", "allerdings", "jedoch", "insgesamt", "zusammenfassend", "abschließend", "letztendlich", "schließlich", "folglich", "somit", "erstens", "zweitens", "drittens", "nichtsdestotrotz", "im gegensatz dazu", "andererseits", "infolgedessen",
 ]
 
 # Signs of a real person talking: contractions, slang, first person, filler.
@@ -52,6 +56,8 @@ HUMAN_MARKERS = [
     "okay", "stuff", "anyway", "anyways", "dunno", "ugh", "wow", "damn", "pretty much",
     "i guess", "i mean", "you know", "i", "my", "me",
     "mình", "tui", "nhé", "nha", "nhỉ", "á", "thôi", "chả", "kiểu", "ủa",
+    # German
+    "ich", "mein", "meine", "mir", "mich", "halt", "eigentlich", "ehrlich gesagt", "irgendwie", "naja", "na ja", "krass", "echt", "keine ahnung", "oder so", "gell", "hab", "gibt's", "geht's", "ne",
 ]
 
 # Weights used to combine the signals into one score (sum = 1).
