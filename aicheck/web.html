@@ -121,9 +121,29 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px soli
 .clear-hist { justify-self: start; border: 0; background: none; padding: 4px 8px; font-size: 12px; font-weight: 500; color: var(--muted); }
 .clear-hist:hover { color: var(--accent); }
 .side-foot { margin-top: auto; display: grid; gap: 10px; }
-.mode { font-size: 12px; font-weight: 500; color: var(--muted); background: var(--sunk); border-radius: 10px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
-.mode i { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); flex: none; }
-.mode.on i { background: var(--human); }
+.mode { background: var(--sunk); border-radius: 14px; padding: 12px; display: grid; gap: 10px; }
+.mc-head { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; color: var(--muted); }
+.mode i { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); flex: none; }
+.mode.on i { background: var(--human); box-shadow: 0 0 0 3px var(--human-soft); }
+.mc-name { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 14px; white-space: nowrap; font-weight: 800; letter-spacing: -0.02em; }
+.mc-badge { font-size: 11px; font-weight: 700; letter-spacing: 0; border-radius: 99px; padding: 3px 9px; white-space: nowrap; }
+.mc-badge.lite { background: var(--mid-soft); color: var(--mid); }
+.mc-badge.full { background: var(--human-soft); color: var(--human); }
+.mc-up { width: 100%; display: grid; gap: 2px; text-align: left; border: 0; border-radius: 12px; padding: 10px 12px; background: linear-gradient(110deg, #fc601c, #e7450c); color: #ffffff; box-shadow: 0 10px 20px -12px var(--accent); position: relative; overflow: hidden; }
+.mc-up:hover { border-color: transparent; transform: translateY(-1px); }
+.mc-up b { font-size: 14px; }
+.mc-up small { font-size: 11px; font-weight: 500; opacity: .9; }
+.mc-up::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.28) 50%, transparent 70%); transform: translateX(-100%); animation: shine 3.5s ease-in-out infinite; }
+@keyframes shine { 0%, 60% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.mc-up.down { background: none; color: var(--muted); box-shadow: none; padding: 0; font-weight: 500; }
+.mc-up.down::after { display: none; }
+.mc-up.down b { font-size: 12px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+.mc-up.down small { display: none; }
+.upsell { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border: 1px solid var(--accent-2); background: linear-gradient(110deg, var(--ai-soft), var(--surface) 70%); border-radius: 14px; padding: 12px 14px; }
+.upsell .up-ico { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--accent-2), var(--accent)); color: #ffffff; display: grid; place-items: center; font-size: 17px; flex: none; }
+.upsell p { margin: 0; flex: 1 1 220px; font-size: 13px; color: var(--muted); }
+.upsell p b { color: var(--fg); display: block; font-size: 14px; }
+.upsell .x { border: 0; background: none; padding: 4px 6px; color: var(--muted); font-size: 18px; line-height: 1; }
 .privacy { font-size: 12px; color: var(--muted); margin: 0; padding: 0 8px; }
 
 /* Main */
@@ -208,7 +228,7 @@ mark.s2 { background: none; padding: 0; border-bottom: 2px solid var(--accent); 
 .lm p b { color: var(--fg); }
 .lm button { flex: none; }
 .lm .lm-alt { justify-self: start; padding: 0; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
-.lm-switch { justify-self: start; padding: 0 8px; font-size: 12px; text-align: left; }
+
 .prog { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
 .prog i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .2s ease; }
 
@@ -235,7 +255,7 @@ details a { color: var(--accent); font-weight: 700; }
   .kbd { display: none; }
 }
 @media (max-width: 560px) { .signals { grid-template-columns: minmax(0, 1fr); } .headline { grid-template-columns: minmax(0, 1fr); gap: 10px; } .count { flex: 1 0 100%; } .bar-row .go { flex: 1 0 100%; order: 9; } }
-@media (prefers-reduced-motion: reduce) { .scale b, .meter i, .side { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .scale b, .meter i, .side { transition: none; } .mc-up::after { animation: none; display: none; } }
 </style>
 </head>
 <body>
@@ -278,8 +298,11 @@ details a { color: var(--accent); font-weight: 700; }
 
     <div class="side-foot">
       <button class="nav" id="helpBtn" type="button"><span class="ico" aria-hidden="true">?</span>How does this work?</button>
-      <div class="mode" id="mode"><i></i><span id="modeText">Writing-style check</span></div>
-      <button class="link lm-switch" id="lmSwitch" type="button" hidden></button>
+      <div class="mode" id="mode">
+        <div class="mc-head"><i></i><span id="modeText">Writing-style check</span></div>
+        <div class="mc-name" id="mcName" hidden></div>
+        <button class="mc-up" id="lmSwitch" type="button" hidden></button>
+      </div>
       <p class="privacy" id="privacy">Your text never leaves your device.</p>
     </div>
   </aside>
@@ -298,6 +321,12 @@ details a { color: var(--accent); font-weight: 700; }
 
     <div class="work">
       <div class="card">
+        <div class="upsell" id="upsell" hidden>
+          <span class="up-ico" aria-hidden="true">⚡</span>
+          <p><b>Upgrade to the Accurate AI model</b>Catches more AI text: 98% accuracy in our tests, up from 93% with Lite. One-time download of about 730 MB.</p>
+          <button class="go" id="upBtn" type="button">Upgrade</button>
+          <button class="x" id="upX" type="button" aria-label="Dismiss">×</button>
+        </div>
         <div class="lm" id="lmBox" hidden>
           <div class="lm-row">
             <p id="lmMsg"><b>Turn on the AI model</b> for a much more accurate check. It runs inside your browser, so your text still never leaves your device. One-time download of about 275 MB.</p>
@@ -703,7 +732,7 @@ async function loadLM(key) {
   if (lm) { lm.terminate(); lm = null; }
   lmKey = key;
   const M = LMMODELS[key];
-  $("lmBox").hidden = false; $("lmAlt").hidden = true; $("lmSwitch").hidden = true;
+  $("lmBox").hidden = false; $("lmAlt").hidden = true; $("lmSwitch").hidden = true; $("mcName").hidden = true; $("upsell").hidden = true;
   $("lmBtn").disabled = true; $("lmBtn").textContent = "Loading…"; $("lmProg").hidden = false; $("lmBar").style.width = "0%";
   $("mode").classList.remove("on"); $("modeText").textContent = "Writing-style check";
   const cached = await lmCached(key);
@@ -739,11 +768,18 @@ async function loadLM(key) {
       // Ask the browser not to clear the saved model when disk space runs low.
       try { navigator.storage?.persist?.(); } catch (e) { /* not supported */ }
       $("lmBox").hidden = true;
-      $("mode").classList.add("on"); $("modeText").textContent = `AI model on (${M.label.toLowerCase()}) · saved in this browser`;
+      $("mode").classList.add("on"); $("modeText").textContent = "AI model on · saved in this browser";
+      $("mcName").innerHTML = key === "full" ? `Accurate model <span class="mc-badge full">98% accuracy</span>` : `Lite model <span class="mc-badge lite">93% accuracy</span>`;
+      $("mcName").hidden = false;
       const other = key === "full" ? "lite" : "full";
-      $("lmSwitch").textContent = other === "full" ? `Switch to the accurate model (${mb("full")} MB)` : `Switch to the lite model (${mb("lite")} MB)`;
+      $("lmSwitch").className = other === "full" ? "mc-up" : "mc-up down";
+      $("lmSwitch").innerHTML = other === "full"
+        ? `<b>⚡ Upgrade to Accurate</b><small>Catches more AI text · ${mb("full")} MB, one time</small>`
+        : `<b>Use the lite model instead (${mb("lite")} MB)</b>`;
       $("lmSwitch").onclick = () => loadLM(other);
       $("lmSwitch").hidden = false;
+      let dismissed = false; try { dismissed = localStorage.getItem("checkai.upsell") === "no"; } catch (e) { /* storage blocked */ }
+      $("upsell").hidden = !(key === "lite" && LM_SUGGEST === "full" && !dismissed);
       if ($("txt").value.trim()) run();
     } else if (m.type === "result" || m.type === "error") {
       const job = lmJobs.get(m.id);
@@ -813,6 +849,8 @@ $("pAi").onclick = () => sample(SAMPLE_AI);
 $("pHu").onclick = () => sample(SAMPLE_HUMAN);
 $("clear").onclick = () => { $("txt").value = ""; updateCount(); reset(); $("txt").focus(); };
 $("new").onclick = () => { $("txt").value = ""; updateCount(); reset(); closeMenu(); $("txt").focus(); };
+$("upBtn").onclick = () => loadLM("full");
+$("upX").onclick = () => { $("upsell").hidden = true; try { localStorage.setItem("checkai.upsell", "no"); } catch (e) { /* storage blocked */ } };
 $("helpBtn").onclick = () => { closeMenu(); $("how").open = true; $("how").scrollIntoView({behavior: "smooth", block: "start"}); };
 $("txt").addEventListener("input", updateCount);
 $("txt").addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") run(); });
