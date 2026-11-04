@@ -207,6 +207,8 @@ mark.s2 { background: none; padding: 0; border-bottom: 2px solid var(--accent); 
 .lm p { margin: 0; font-size: 13px; color: var(--muted); flex: 1 1 260px; }
 .lm p b { color: var(--fg); }
 .lm button { flex: none; }
+.lm .lm-alt { justify-self: start; padding: 0; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.lm-switch { justify-self: start; padding: 0 8px; font-size: 12px; text-align: left; }
 .prog { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
 .prog i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .2s ease; }
 
@@ -277,6 +279,7 @@ details a { color: var(--accent); font-weight: 700; }
     <div class="side-foot">
       <button class="nav" id="helpBtn" type="button"><span class="ico" aria-hidden="true">?</span>How does this work?</button>
       <div class="mode" id="mode"><i></i><span id="modeText">Writing-style check</span></div>
+      <button class="link lm-switch" id="lmSwitch" type="button" hidden></button>
       <p class="privacy" id="privacy">Your text never leaves your device.</p>
     </div>
   </aside>
@@ -300,6 +303,7 @@ details a { color: var(--accent); font-weight: 700; }
             <p id="lmMsg"><b>Turn on the AI model</b> for a much more accurate check. It runs inside your browser, so your text still never leaves your device. One-time download of about 275 MB.</p>
             <button class="go" id="lmBtn" type="button">Turn on AI model</button>
           </div>
+          <button class="link lm-alt" id="lmAlt" type="button" hidden></button>
           <div class="prog" id="lmProg" hidden><i id="lmBar"></i></div>
         </div>
         <label for="txt" class="label">Your text</label>
@@ -519,7 +523,7 @@ function show(text, r) {
   $("verdict").textContent = r.verdict;
   $("verdict").className = "verdict " + (p >= 55 ? "v-ai" : p > 40 ? "v-mid" : "v-human");
   $("meta").textContent = `${r.words} words · ${r.sentences_count} sentences` + (r.model
-    ? ` · Binoculars score ${r.model.binoculars.toFixed(3)} (below ${r.model.threshold.toFixed(3)} looks AI-written${r.model.calibrated ? "" : ", not calibrated"}) · model counts for 70% of the score`
+    ? ` · Binoculars score ${r.model.binoculars.toFixed(3)} (below ${r.model.threshold.toFixed(3)} looks AI-written${r.model.calibrated ? "" : ", not calibrated"}) · model counts for 70% of the score` + (r.model.name ? ` · ${r.model.name}` : "")
     : " · writing-style signals only (AI model off)");
   const ex = explain(text, r);
   $("sumHead").textContent = ex.head;
@@ -595,16 +599,26 @@ $("hist").onclick = e => {
 $("histClear").onclick = () => { recent = []; saveHistory(); renderHistory(); };
 
 // In-browser language model (Binoculars), mirroring aicheck/model.py and aicheck/detector.py.
-// Threshold and scale were calibrated inside Chromium on 116 HC3 answers (people vs. ChatGPT), separate from the test set.
+// Each model's threshold and scale were calibrated inside Chromium on 116 HC3 answers (people vs. ChatGPT),
+// separate from the 114 test answers.
 const LMCFG = {
   lib: "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0/dist/transformers.min.js",
-  observer: "onnx-community/SmolLM2-135M-ONNX", performer: "HuggingFaceTB/SmolLM2-135M-Instruct", dtype: "int8",
-  maxTokens: 512, window: 256, threshold: 0.753, scale: 0.038, weight: 0.7, size: 275e6,
+  dtype: "int8", maxTokens: 512, window: 256, weight: 0.7,
+};
+const LMMODELS = {
+  full: {label: "Accurate", observer: "onnx-community/SmolLM2-360M-ONNX", performer: "HuggingFaceTB/SmolLM2-360M-Instruct",
+         threshold: 0.760, scale: 0.045, size: 730e6},
+  lite: {label: "Lite", observer: "onnx-community/SmolLM2-135M-ONNX", performer: "HuggingFaceTB/SmolLM2-135M-Instruct",
+         threshold: 0.753, scale: 0.038, size: 275e6},
 };
 const LMKEY = "checkai.lm";
-let lm = null;  // set to the worker once the model is ready
+let lm = null;      // set to the worker once the model is ready
+let lmKey = null;   // "full" or "lite": the model that is loaded or loading
 const sigmoid = x => 1 / (1 + Math.exp(-Math.max(-60, Math.min(60, x))));
-const lmProb = b => sigmoid((LMCFG.threshold - b) / LMCFG.scale);
+const lmProb = b => sigmoid((LMMODELS[lmKey].threshold - b) / LMMODELS[lmKey].scale);
+// Phones and low-memory computers get the lite model suggested first.
+const LM_SUGGEST = (navigator.deviceMemory && navigator.deviceMemory <= 4) || matchMedia("(max-width: 700px)").matches ? "lite" : "full";
+const mb = key => Math.round(LMMODELS[key].size / 1e6);
 
 // The model runs in a Web Worker so downloading, starting and scoring never freeze the page.
 // Per token: loss = performer cross-entropy on the real next token, xent = observer vs performer cross-entropy.
@@ -651,7 +665,8 @@ self.onmessage = async ({data: m}) => {
       const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
       const sent = m.segs.map(([, , si]) => {
         const idx = owner.map((o, i) => o === si && i < loss.length ? i : -1).filter(i => i >= 0);
-        return idx.length >= 3 ? mean(idx.map(i => loss[i])) / mean(idx.map(i => xent[i])) : null;
+        // Very short sentences give noisy scores, so only sentences of 10+ tokens get their own score.
+        return idx.length >= 10 ? mean(idx.map(i => loss[i])) / mean(idx.map(i => xent[i])) : null;
       });
       postMessage({type: "result", id: m.id, b: mean(loss) / mean(xent), sent, tokens: loss.length, truncated: ids.length > C.maxTokens});
     }
@@ -660,15 +675,35 @@ self.onmessage = async ({data: m}) => {
 const lmJobs = new Map(); let lmSeq = 0;
 function lmCall(msg) { return new Promise((resolve, reject) => { const id = ++lmSeq; lmJobs.set(id, {resolve, reject}); lm.postMessage({...msg, id}); }); }
 
-// Is the model already saved in this browser? true / false, or null when the browser cannot save it (e.g. some private windows).
-async function lmCached() {
-  try { const keys = await (await caches.open("transformers-cache")).keys(); return keys.filter(r => /\.onnx/.test(r.url)).length >= 2; }
-  catch (e) { return null; }
+// Is this model already saved in this browser? true / false, or null when the browser cannot save it (e.g. some private windows).
+async function lmCached(key) {
+  const m = LMMODELS[key];
+  try {
+    const urls = (await (await caches.open("transformers-cache")).keys()).map(r => r.url).filter(u => /\.onnx/.test(u));
+    return [m.observer, m.performer].every(name => urls.some(u => u.includes("/" + name + "/")));
+  } catch (e) { return null; }
 }
 
-async function loadLM() {
+function offerLM() {
+  const alt = LM_SUGGEST === "full" ? "lite" : "full";
+  $("lmBox").hidden = false; $("lmProg").hidden = true; $("lmBtn").disabled = false; $("lmBtn").textContent = "Turn on AI model";
+  $("lmMsg").innerHTML = LM_SUGGEST === "full"
+    ? `<b>Turn on the AI model</b> for a much more accurate check. It runs inside your browser, so your text still never leaves your device. One-time download of about ${mb("full")} MB.`
+    : `<b>Turn on the AI model</b> for a much more accurate check. On this device we suggest the lite model: a one-time download of about ${mb("lite")} MB. Your text never leaves your device.`;
+  $("lmAlt").textContent = alt === "lite" ? `On a phone or slow computer? Use the lite model (${mb("lite")} MB)` : `Use the accurate model instead (${mb("full")} MB, best on a computer)`;
+  $("lmAlt").hidden = false;
+  $("lmBtn").onclick = () => loadLM(LM_SUGGEST);
+  $("lmAlt").onclick = () => loadLM(alt);
+}
+
+async function loadLM(key) {
+  if (lm) { lm.terminate(); lm = null; }
+  lmKey = key;
+  const M = LMMODELS[key];
+  $("lmBox").hidden = false; $("lmAlt").hidden = true; $("lmSwitch").hidden = true;
   $("lmBtn").disabled = true; $("lmBtn").textContent = "Loading…"; $("lmProg").hidden = false; $("lmBar").style.width = "0%";
-  const cached = await lmCached();
+  $("mode").classList.remove("on"); $("modeText").textContent = "Writing-style check";
+  const cached = await lmCached(key);
   $("lmMsg").innerHTML = cached ? "<b>Loading the AI model saved in this browser…</b> No download needed."
     : cached === null ? "<b>Starting the download…</b> This browser window cannot save files (private mode?), so the model will download again next time."
     : "<b>Starting the download…</b>";
@@ -676,7 +711,11 @@ async function loadLM() {
   let w;
   const fail = msg => {
     if (w) w.terminate();
+    lm = null;
     $("lmProg").hidden = true; $("lmBtn").disabled = false; $("lmBtn").textContent = "Try again";
+    $("lmBtn").onclick = () => loadLM(key);
+    $("lmAlt").textContent = key === "full" ? `Try the smaller lite model (${mb("lite")} MB)` : "Cancel"; $("lmAlt").hidden = false;
+    $("lmAlt").onclick = () => key === "full" ? loadLM("lite") : offerLM();
     $("lmMsg").innerHTML = `<b>The AI model could not load</b> (${html(msg)}). Writing-style signals still work.`;
   };
   try { w = new Worker(URL.createObjectURL(new Blob([LM_WORKER], {type: "text/javascript"})), {type: "module"}); }
@@ -685,7 +724,7 @@ async function loadLM() {
   w.onmessage = ({data: m}) => {
     if (m.type === "progress") {
       files[m.key] = [m.loaded, m.total];
-      const v = Object.values(files), got = v.reduce((a, x) => a + x[0], 0), all = Math.max(LMCFG.size, v.reduce((a, x) => a + x[1], 0));
+      const v = Object.values(files), got = v.reduce((a, x) => a + x[0], 0), all = Math.max(M.size, v.reduce((a, x) => a + x[1], 0));
       $("lmBar").style.width = Math.round(got / all * 100) + "%";
       if (cached) return;
       $("lmMsg").innerHTML = got >= all * .995
@@ -693,11 +732,15 @@ async function loadLM() {
         : `<b>Downloading the AI model…</b> ${Math.round(got / 1e6)} of ~${Math.round(all / 1e6)} MB. This only happens once.`;
     } else if (m.type === "ready") {
       lm = w;
-      try { localStorage.setItem(LMKEY, "on"); } catch (e) { /* storage blocked */ }
+      try { localStorage.setItem(LMKEY, key); } catch (e) { /* storage blocked */ }
       // Ask the browser not to clear the saved model when disk space runs low.
       try { navigator.storage?.persist?.(); } catch (e) { /* not supported */ }
       $("lmBox").hidden = true;
-      $("mode").classList.add("on"); $("modeText").textContent = "AI model on · saved in this browser";
+      $("mode").classList.add("on"); $("modeText").textContent = `AI model on (${M.label.toLowerCase()}) · saved in this browser`;
+      const other = key === "full" ? "lite" : "full";
+      $("lmSwitch").textContent = other === "full" ? `Switch to the accurate model (${mb("full")} MB)` : `Switch to the lite model (${mb("lite")} MB)`;
+      $("lmSwitch").onclick = () => loadLM(other);
+      $("lmSwitch").hidden = false;
       if ($("txt").value.trim()) run();
     } else if (m.type === "result" || m.type === "error") {
       const job = lmJobs.get(m.id);
@@ -705,7 +748,7 @@ async function loadLM() {
       else if (m.type === "error") fail(m.message);
     }
   };
-  w.postMessage({type: "load", cfg: LMCFG});
+  w.postMessage({type: "load", cfg: {...LMCFG, observer: M.observer, performer: M.performer}});
 }
 
 async function lmCheck(text) {
@@ -723,7 +766,7 @@ async function lmCheck(text) {
   r.verdict = verdictFor(r.ai_probability);
   const bySent = {}; segs.forEach(([, , si], i) => { bySent[si] = m.sent[i]; });
   r.sentences = r.sentences.map((s, si) => ({...s, ai_probability: bySent[si] != null ? lmProb(bySent[si]) : null}));
-  r.model = {binoculars: m.b, threshold: LMCFG.threshold, calibrated: true, model_probability: lmProb(m.b)};
+  r.model = {binoculars: m.b, threshold: LMMODELS[lmKey].threshold, calibrated: true, model_probability: lmProb(m.b), name: LMMODELS[lmKey].observer.split("/")[1].replace("-ONNX", "")};
   if (m.truncated) r.warnings.push(`Long text: the AI model only read the first ${m.tokens} tokens. The writing-style signals cover all of it.`);
   return r;
 }
@@ -767,7 +810,6 @@ $("pAi").onclick = () => sample(SAMPLE_AI);
 $("pHu").onclick = () => sample(SAMPLE_HUMAN);
 $("clear").onclick = () => { $("txt").value = ""; updateCount(); reset(); $("txt").focus(); };
 $("new").onclick = () => { $("txt").value = ""; updateCount(); reset(); closeMenu(); $("txt").focus(); };
-$("lmBtn").onclick = loadLM;
 $("helpBtn").onclick = () => { closeMenu(); $("how").open = true; $("how").scrollIntoView({behavior: "smooth", block: "start"}); };
 $("txt").addEventListener("input", updateCount);
 $("txt").addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") run(); });
@@ -792,8 +834,11 @@ $("txt").addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.ke
   }
   // No server model: offer the in-browser one, and reload it from the browser cache if it was turned on before.
   $("lmBox").hidden = false;
-  let on = false; try { on = localStorage.getItem(LMKEY) === "on"; } catch (e) { /* storage blocked */ }
-  if (on || await lmCached()) loadLM();
+  // Reload a model that was turned on before (older pages stored "on" for the lite model), or one found in the cache.
+  let pref = null; try { pref = localStorage.getItem(LMKEY); } catch (e) { /* storage blocked */ }
+  if (pref === "on") pref = "lite";
+  if (!LMMODELS[pref]) pref = await lmCached("full") ? "full" : await lmCached("lite") ? "lite" : null;
+  pref ? loadLM(pref) : offerLM();
 })();
 </script>
 </body>
