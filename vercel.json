@@ -4,5 +4,6 @@
   "installCommand": "echo 'No install needed'",
   "buildCommand": "echo 'Static site, no build needed'",
   "outputDirectory": "browser",
-  "cleanUrls": false
+  "cleanUrls": false,
+  "trailingSlash": true
 }

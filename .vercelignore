@@ -5,3 +5,4 @@ requirements.txt
 aicheck/
 tests/
 samples/
+tools/

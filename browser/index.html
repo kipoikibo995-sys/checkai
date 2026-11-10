@@ -109,6 +109,11 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px soli
 .faq .qa { display: grid; gap: 4px; border-top: 1px solid var(--line); padding-top: 12px; }
 .faq h3 { margin: 0; font-size: 15px; }
 .faq p { margin: 0; color: var(--muted); font-size: 14px; max-width: 80ch; }
+.guides h2 { margin: 6px 0 12px; font-size: 22px; letter-spacing: -0.03em; }
+.guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.guide-grid a { display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; text-decoration: none; color: var(--fg); font-weight: 700; font-size: 15px; line-height: 1.4; }
+.guide-grid a span { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 4px; }
+.guide-grid a:hover { border-color: var(--accent); }
 .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
 @media (max-width: 1100px) { .site-links { gap: 0; } .site-links a { padding: 10px 8px; } }
 @media (max-width: 899px) {
@@ -132,6 +137,7 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px soli
 .group .h { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; padding: 0 8px; }
 .nav { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; border-radius: 10px; background: none; padding: 8px; font-weight: 500; color: var(--fg); min-width: 0; }
 .nav:hover { background: var(--sunk); }
+a.nav { text-decoration: none; font-size: 14px; }
 .nav .ico { width: 26px; height: 26px; border-radius: 8px; background: var(--sunk); display: grid; place-items: center; font-size: 13px; flex: none; }
 .nav:hover .ico { background: var(--surface); }
 .hist { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
@@ -327,6 +333,13 @@ details a { color: var(--accent); font-weight: 700; }
       <button class="clear-hist" id="histClear" type="button" hidden>Clear history</button>
     </div>
 
+    <nav class="group" aria-label="Guides">
+      <p class="h">Guides</p>
+      <a class="nav" href="/chatgpt-detector/"><span class="ico" aria-hidden="true">💬</span>ChatGPT detector</a>
+      <a class="nav" href="/ai-detector-for-kdp/"><span class="ico" aria-hidden="true">📚</span>For KDP authors</a>
+      <a class="nav" href="/how-to-check-if-text-is-ai-written/"><span class="ico" aria-hidden="true">🔎</span>How to check AI text</a>
+    </nav>
+
     <div class="side-foot">
       <button class="nav" id="helpBtn" type="button"><span class="ico" aria-hidden="true">?</span>How does this work?</button>
       <div class="mode" id="mode">
@@ -459,6 +472,15 @@ details a { color: var(--accent); font-weight: 700; }
       <div class="qa"><h3>Can it detect ChatGPT, Claude and Gemini?</h3><p>It looks for patterns common to text from large language models rather than one specific product, so it can flag text from ChatGPT, Claude, Gemini and similar tools. Heavily edited or paraphrased AI text is harder to detect.</p></div>
       <div class="qa"><h3>Which languages does it support?</h3><p>English. German works as an experimental option: when you check German text you can download a separate German model (about 1 GB), but in our tests it was right only about 2 times in 3 and each check can take up to a minute, so treat its results with great care. Other languages will not get a reliable score.</p></div>
       <div class="qa"><h3>How long should the text be?</h3><p>150 words or more gives the best result. Results for texts under 120 words are unreliable.</p></div>
+    </section>
+
+    <section class="guides" aria-labelledby="guidesTitle">
+      <h2 id="guidesTitle">Guides</h2>
+      <div class="guide-grid">
+        <a href="/chatgpt-detector/">ChatGPT detector<span>How ChatGPT text gives itself away, and how accurate a check can be.</span></a>
+        <a href="/ai-detector-for-kdp/">AI detector for KDP authors<span>Check a book manuscript privately before you publish.</span></a>
+        <a href="/how-to-check-if-text-is-ai-written/">How to check if text is AI-written<span>A step-by-step method that does not rely on one score.</span></a>
+      </div>
     </section>
   </main>
 </div>

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ChatGPT Detector: Check If Text Was Written by ChatGPT | Koji</title>
+<meta name="description" content="Free ChatGPT detector that runs in your browser. See how likely a text was written by ChatGPT, which phrases give it away, and how accurate the check is.">
+<link rel="canonical" href="https://kojicheck.kojilaunch.com/chatgpt-detector/">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#f05216">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="KoJi Academy">
+<meta property="og:url" content="https://kojicheck.kojilaunch.com/chatgpt-detector/">
+<meta property="og:title" content="ChatGPT Detector: Check If Text Was Written by ChatGPT | Koji">
+<meta property="og:description" content="Free ChatGPT detector that runs in your browser. See how likely a text was written by ChatGPT, which phrases give it away, and how accurate the check is.">
+<meta property="og:image" content="https://kojicheck.kojilaunch.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ChatGPT Detector: Check If Text Was Written by ChatGPT | Koji">
+<meta name="twitter:description" content="Free ChatGPT detector that runs in your browser. See how likely a text was written by ChatGPT, which phrases give it away, and how accurate the check is.">
+<meta name="twitter:image" content="https://kojicheck.kojilaunch.com/og.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 37'%3E%3Cpath d='M10 0h12a17.5 17.5 0 0 1 0 35H10z' fill='%23f05216'/%3E%3Cpath d='M0 6h4a9 9 0 0 1 9 9v22H0z' fill='%23081c25'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800;9..40,900&display=swap">
+<link rel="stylesheet" href="/assets/guide.css">
+<script type="application/ld+json">[{"@context": "https://schema.org", "@type": "Article", "headline": "ChatGPT detector", "description": "Free ChatGPT detector that runs in your browser. See how likely a text was written by ChatGPT, which phrases give it away, and how accurate the check is.", "url": "https://kojicheck.kojilaunch.com/chatgpt-detector/", "datePublished": "2026-11-10", "dateModified": "2026-11-10", "inLanguage": "en", "image": "https://kojicheck.kojilaunch.com/og.png", "author": {"@type": "Organization", "name": "KoJi Academy", "url": "https://kojilaunch.com/"}, "publisher": {"@type": "Organization", "name": "KoJi Academy", "url": "https://kojilaunch.com/"}, "mainEntityOfPage": "https://kojicheck.kojilaunch.com/chatgpt-detector/"}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Koji AI Checker", "item": "https://kojicheck.kojilaunch.com/"}, {"@type": "ListItem", "position": 2, "name": "ChatGPT detector", "item": "https://kojicheck.kojilaunch.com/chatgpt-detector/"}]}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can it detect GPT-4, GPT-5 and newer ChatGPT models?", "acceptedAnswer": {"@type": "Answer", "text": "It looks for patterns common to large language models, so it can flag text from newer ChatGPT versions too. Newer models write less predictably, though, so expect it to miss more of their text than of older ChatGPT output."}}, {"@type": "Question", "name": "Does it also detect Claude or Gemini?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, in the same way: it does not look for one product's fingerprint, but for the predictability and style that most AI models share."}}, {"@type": "Question", "name": "Can students or writers be wrongly flagged?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, occasionally. In our tests the Accurate model flagged 2 of 57 human answers. Formal, plain writing and writing by non-native speakers can look more predictable. Never use a detector score as the only evidence."}}, {"@type": "Question", "name": "Is the text I paste stored?", "acceptedAnswer": {"@type": "Answer", "text": "No. The check runs inside your browser and nothing is uploaded. Only a short list of your recent checks is kept in your own browser, and you can clear it."}}]}]</script>
+</head>
+<body>
+<header class="site-head" id="siteHead">
+  <div class="site-nav">
+    <div class="site-id">
+      <a class="site-logo" href="https://kojilaunch.com/"><span class="brand-mark" aria-hidden="true"></span>KoJi Academy</a>
+      <a class="site-tool" href="/">AI Checker</a>
+    </div>
+    <nav class="site-links" id="siteLinks" aria-label="Main navigation">
+      <a href="https://kojilaunch.com/about/">About</a>
+      <a href="https://kojilaunch.com/my-blog/">Journal</a>
+      <a href="https://kojilaunch.com/reviews/">Reviews</a>
+      <a href="https://kojilaunch.com/my-product/">Products</a>
+      <a href="https://kojilaunch.com/gifts/">Resources</a>
+      <a href="https://kojilaunch.com/stream-writer-jv/">Affiliate</a>
+      <a class="nav-member" href="https://kojilaunch.com/login/?redirect_to=https%3A%2F%2Fkojilaunch.com%2Fmember-dashboard%2F">Member Access</a>
+    </nav>
+    <button class="site-toggle" id="siteToggle" type="button" aria-expanded="false" aria-controls="siteLinks" aria-label="Open site menu">☰</button>
+    <a class="member" href="https://kojilaunch.com/login/?redirect_to=https%3A%2F%2Fkojilaunch.com%2Fmember-dashboard%2F">Member Access</a>
+  </div>
+</header>
+<main class="wrap">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Koji AI Checker</a> › ChatGPT detector</nav>
+<article>
+<p class="eyebrow">Free · private · no sign-up</p>
+<h1>ChatGPT detector</h1>
+<p class="lede">Koji AI Checker estimates how likely a text was written by ChatGPT or a similar AI model, shows the phrases that give it away, and runs entirely in your browser.</p>
+<p class="meta">By KoJi Academy · Updated 2026-11-10</p>
+
+<div class="cta"><p><b>Check your text with Koji AI Checker</b>Paste the text you want to check. It is scored on your device and never uploaded.</p><a class="btn" href="/">Check text free</a></div>
+
+<h2>How ChatGPT writing gives itself away</h2>
+<p>Large language models such as ChatGPT write by picking likely next words. That leaves patterns a person rarely produces all at once:</p>
+<ul>
+<li><b>Unusually predictable wording.</b> Each word is close to what a language model would expect next. This is the strongest signal, and the one our AI model measures.</li>
+<li><b>Buzzwords and stock phrases</b> such as "delve into", "a testament to", "plays a crucial role", "seamless" or "in today's fast-paced world".</li>
+<li><b>Stock transitions</b> at the start of sentences: "Moreover", "Furthermore", "Additionally", "In conclusion".</li>
+<li><b>Even sentence lengths.</b> People mix short and long sentences; unedited AI text is often strikingly regular.</li>
+<li><b>Little personal voice.</b> Few contractions, opinions, specific memories or first-person details.</li>
+</ul>
+<p>None of these alone proves anything. Together, they make a text read as machine-made, and that is what the checker scores.</p>
+
+<h2>How the check works</h2>
+<p>The score combines two parts. The larger part (70%) comes from two small language models from the SmolLM2 family that run in your browser. They use the <b>Binoculars</b> method: they measure how predictable each word is, then compare that with how predictable a model would expect the text to be. Dividing the two keeps naturally predictable topics, such as technical or formal writing, from being flagged just for being plain. The other 30% comes from the six writing-style signals listed above.</p>
+<p>Because everything runs on your device, the first time you turn on the AI model your browser downloads it once (about 730 MB for the Accurate model, or 275 MB for the Lite model on phones). After that it loads from your browser in a few seconds.</p>
+<div class="cta"><p><b>Check your text with Koji AI Checker</b>Paste your text and get a score in seconds. Free, no sign-up, and your text never leaves your device.</p><a class="btn" href="/">Check text free</a></div>
+
+<h2>How accurate is it on ChatGPT text?</h2>
+<p>We tested the checker on answers from the public <b>HC3</b> dataset, where the same questions were answered by people and by ChatGPT. On 114 answers it had not seen during setup:</p>
+<div class="table-scroll"><table>
+<tr><th>Model</th><th>Right overall</th><th>ChatGPT answers caught</th><th>Human answers wrongly flagged</th></tr>
+<tr><td>Accurate (360M)</td><td>98%</td><td>100%</td><td>2 of 57</td></tr>
+<tr><td>Lite (135M)</td><td>93%</td><td>86%</td><td>0 of 57</td></tr>
+</table></div>
+<p>Two honest caveats. HC3 comes from the 2022 version of ChatGPT; newer models write less predictably, and on a small set of 11 texts mostly from 2026 models the Accurate model caught only 6. And text that was edited, paraphrased or run through a "humanizer" is much harder for any detector to catch.</p>
+
+<h2>Who uses a ChatGPT detector, and for what</h2>
+<ul>
+<li><b>Teachers</b> use it as a first filter on essays, then talk with the student or look at drafts before drawing any conclusion.</li>
+<li><b>Editors and content managers</b> check freelance articles and spot paragraphs that read as raw AI output, so they can ask for a rewrite with real examples and sources.</li>
+<li><b>Hiring teams</b> look at cover letters and writing samples, where generic AI phrasing hides what the candidate actually thinks.</li>
+<li><b>Writers</b> check their own AI-assisted drafts to find the passages that still sound generic and rewrite them in their own voice.</li>
+</ul>
+<p>In every case the useful output is the same: the highlighted phrases and the plain-language reasons show <i>where</i> a text reads as machine-made, which is far more actionable than a single percentage.</p>
+
+<h2>Tips for a reliable result</h2>
+<ul>
+<li>Check at least 150 words. Results under 120 words are unreliable.</li>
+<li>Check English text. German works only as an experimental option; other languages are not supported.</li>
+<li>Look at the highlighted phrases and sentences, not only the percentage.</li>
+<li>Never treat one score as proof. Ask for drafts or version history if it matters how a text was written.</li>
+</ul>
+
+<section class="faq" aria-labelledby="faq">
+<h2 id="faq">Frequently asked questions</h2>
+<h3>Can it detect GPT-4, GPT-5 and newer ChatGPT models?</h3>
+<p>It looks for patterns common to large language models, so it can flag text from newer ChatGPT versions too. Newer models write less predictably, though, so expect it to miss more of their text than of older ChatGPT output.</p>
+<h3>Does it also detect Claude or Gemini?</h3>
+<p>Yes, in the same way: it does not look for one product's fingerprint, but for the predictability and style that most AI models share.</p>
+<h3>Can students or writers be wrongly flagged?</h3>
+<p>Yes, occasionally. In our tests the Accurate model flagged 2 of 57 human answers. Formal, plain writing and writing by non-native speakers can look more predictable. Never use a detector score as the only evidence.</p>
+<h3>Is the text I paste stored?</h3>
+<p>No. The check runs inside your browser and nothing is uploaded. Only a short list of your recent checks is kept in your own browser, and you can clear it.</p>
+</section>
+</article>
+<h2>More guides</h2>
+<div class="related">
+<a href="/ai-detector-for-kdp/">AI detector for KDP authors<span>Check a book manuscript privately before you publish.</span></a>
+<a href="/how-to-check-if-text-is-ai-written/">How to check if text is AI-written<span>A step-by-step method that does not rely on one score.</span></a>
+<a href="/">Koji AI Checker<span>The free AI detector itself.</span></a>
+</div>
+</main>
+<footer class="site-foot">
+  <div class="foot-wrap">
+    <div class="foot-top">
+      <div>
+        <a class="site-logo" href="https://kojilaunch.com/"><span class="brand-mark" aria-hidden="true"></span>KoJi Academy</a>
+        <p>Documenting the blueprint for sovereignty in the digital age.</p>
+      </div>
+      <div class="foot-cols">
+        <nav class="foot-col" aria-label="AI Checker"><b>AI Checker</b>
+          <a href="/">Free AI detector</a>
+          <a href="/chatgpt-detector/">ChatGPT detector</a>
+          <a href="/ai-detector-for-kdp/">AI detector for KDP authors</a>
+          <a href="/how-to-check-if-text-is-ai-written/">How to check if text is AI-written</a>
+        </nav>
+        <nav class="foot-col" aria-label="Programs"><b>Programs</b>
+          <a href="https://kojilaunch.com/saas-vibe-coding/">SaaS &amp; Vibe Coding</a>
+          <a href="https://kojilaunch.com/lets-build-your-website/">Websites</a>
+          <a href="https://kojilaunch.com/stream-writer-jv/">Partner program</a>
+          <a href="https://kojilaunch.com/contactus/">1:1 Coaching</a>
+        </nav>
+        <nav class="foot-col" aria-label="Resources"><b>Resources</b>
+          <a href="https://kojilaunch.com/7-day-roadmap/">7-Day Roadmap</a>
+          <a href="https://kojilaunch.com/gifts/">Free Resources</a>
+          <a href="https://kojilaunch.com/my-blog/">Journal</a>
+        </nav>
+        <nav class="foot-col" aria-label="Company"><b>Company</b>
+          <a href="https://kojilaunch.com/about/">About</a>
+          <a href="https://kojilaunch.com/contactus/">Contact</a>
+          <a href="https://kojilaunch.com/privacy-policy/">Privacy Policy</a>
+          <a href="https://kojilaunch.com/terms-of-service/">Terms of Service</a>
+        </nav>
+      </div>
+    </div>
+    <div class="foot-bottom">© 2026 KoJi Academy. All rights reserved.</div>
+  </div>
+</footer>
+<script>
+document.getElementById("siteToggle").onclick = () => {
+  const o = document.getElementById("siteHead").classList.toggle("open");
+  document.getElementById("siteToggle").setAttribute("aria-expanded", String(o));
+};
+</script>
+</body>
+</html>
