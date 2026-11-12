@@ -223,7 +223,7 @@ page(
     "Free ChatGPT detector that runs in your browser. See how likely a text was written by ChatGPT, which phrases give it away, and how accurate the check is.",
     "ChatGPT detector",
     "Free · private · no sign-up",
-    "Koji AI Checker estimates how likely a text was written by ChatGPT or a similar AI model, shows the phrases that give it away, and runs entirely in your browser.",
+    "Koji AI Checker is a free ChatGPT checker: it estimates how likely a text was written by ChatGPT or a similar AI model, shows the phrases that give it away, and runs entirely in your browser.",
     f"""
 {cta("Paste the text you want to check. It is scored on your device and never uploaded.")}
 
@@ -270,6 +270,7 @@ page(
 </ul>
 """,
     [
+        ("Is this ChatGPT checker free?", "Yes. It is free, needs no account and has no daily limit. The AI model downloads once into your browser, and after that every check runs on your own device."),
         ("Can it detect GPT-4, GPT-5 and newer ChatGPT models?", "It looks for patterns common to large language models, so it can flag text from newer ChatGPT versions too. Newer models write less predictably, though, so expect it to miss more of their text than of older ChatGPT output."),
         ("Does it also detect Claude or Gemini?", "Yes, in the same way: it does not look for one product's fingerprint, but for the predictability and style that most AI models share."),
         ("Can students or writers be wrongly flagged?", "Yes, occasionally. In our tests the Accurate model flagged 2 of 57 human answers. Formal, plain writing and writing by non-native speakers can look more predictable. Never use a detector score as the only evidence."),
